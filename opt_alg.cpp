@@ -42,8 +42,56 @@ double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, doub
 	try
 	{
 		double* p = new double[2] { 0, 0 };
-		//Tu wpisz kod funkcji
 
+		int i = 0;
+		solution Xopt0 = x0;;
+		solution Xopt1(x0 + d);
+		Xopt0.fit_fun(ff, ud1, ud2);
+		Xopt1.fit_fun(ff, ud1, ud2);
+		
+
+		if (Xopt1.y == Xopt0.y)
+		{
+			p[0] = m2d(Xopt0.x);
+			p[1] = m2d(Xopt1.x);
+			return p;
+		}
+
+		if (Xopt0.y > Xopt0.y)
+		{
+			d = -d;
+			Xopt1.x = Xopt0.x + d;
+
+			Xopt1.fit_fun(ff, ud1, ud2);
+			if (Xopt0.y >= Xopt0.y)
+			{
+				p[0] = m2d(Xopt1.x);
+				p[1] = m2d(Xopt0.x);
+				return p;
+			}
+		}
+
+		double xMin1=0;
+
+		while (Xopt0.y<=Xopt1.y)
+		{
+			if (Xopt1.f_calls > Nmax)
+				break;
+			i++;
+			xMin1 = m2d(Xopt1.x);
+			Xopt1.x = Xopt0.x + pow(alpha, i) * d;
+			Xopt1.fit_fun(ff, ud1, ud2);
+		}
+
+		if (d > 0)
+		{
+			p[0] = xMin1;
+			p[1] = m2d(Xopt1.x);
+			return p;
+		}
+
+		p[0] = m2d(Xopt1.x);
+		p[1] = xMin1;
 		return p;
 	}
 	catch (string ex_info)

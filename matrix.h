@@ -8,6 +8,9 @@
 #include<fstream>
 #include<random>
 #include<chrono>
+
+#define _USE_MATH_DEFINES
+#include<math.h>
 using namespace std;
 
 #define SEP_SYMBOL ','

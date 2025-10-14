@@ -68,6 +68,9 @@ void lab0()
 
 void lab1()
 {
+	double epsilon = 1e-2;									// dok³adnoœæ
+	int Nmax = 10000;
+	solution opt;
 
 }
 
