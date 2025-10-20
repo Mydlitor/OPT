@@ -1,6 +1,6 @@
 //Ten plik nie powinien byæ edytowany
 
-#include"solution.h"
+#include "solution.h"
 
 int solution::f_calls = 0;
 int solution::g_calls = 0;

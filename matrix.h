@@ -8,6 +8,7 @@
 #include<fstream>
 #include<random>
 #include<chrono>
+#include<cstdlib>
 
 #define _USE_MATH_DEFINES
 #include<math.h>

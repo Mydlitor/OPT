@@ -20,9 +20,10 @@ void lab6();
 
 int main()
 {
+	srand(time(NULL));
 	try
 	{
-		lab0();
+		lab1();
 	}
 	catch (string EX_INFO)
 	{
@@ -70,8 +71,12 @@ void lab1()
 {
 	double epsilon = 1e-2;									// dok³adnoœæ
 	int Nmax = 10000;
-	solution opt;
+	double x0 = rand() % 200 - 100;
+	double d = 10;
+	double alpha = 1.5;
 
+	double* p = expansion(ff1T, x0, d, alpha, epsilon, Nmax);
+	cout << "x0:" << x0 << ",\t" << p[0] << ", " << p[1];
 }
 
 void lab2()

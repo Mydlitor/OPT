@@ -1,31 +1,31 @@
-#include"opt_alg.h"
+Ôªø#include "opt_alg.h"
 
 solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
-	// Zmienne wejúciowe:
-	// ff - wskaünik do funkcji celu
+	// Zmienne wej≈õciowe:
+	// ff - wska≈∫nik do funkcji celu
 	// N - liczba zmiennych funkcji celu
-	// lb, ub - dolne i gÛrne ograniczenie
-	// epslion - zak≥πdana dok≥adnoúÊ rozwiπzania
-	// Nmax - maksymalna liczba wywo≥aÒ funkcji celu
+	// lb, ub - dolne i g√≥rne ograniczenie
+	// epslion - zak≈ÇƒÖdana dok≈Çadno≈õƒá rozwiƒÖzania
+	// Nmax - maksymalna liczba wywo≈Ça≈Ñ funkcji celu
 	// ud1, ud2 - user data
 	try
 	{
 		solution Xopt;
 		while (true)
 		{
-			Xopt = rand_mat(N);									// losujemy macierz Nx1 stosujπc rozk≥ad jednostajny na przedziale [0,1]
+			Xopt = rand_mat(N);									// losujemy macierz Nx1 stosujƒÖc rozk≈Çad jednostajny na przedziale [0,1]
 			for (int i = 0; i < N; ++i)
-				Xopt.x(i) = (ub(i) - lb(i)) * Xopt.x(i) + lb(i);// przeskalowywujemy rozwiπzanie do przedzia≥u [lb, ub]
-			Xopt.fit_fun(ff, ud1, ud2);							// obliczmy wartoúÊ funkcji celu
+				Xopt.x(i) = (ub(i) - lb(i)) * Xopt.x(i) + lb(i);// przeskalowywujemy rozwiƒÖzanie do przedzia≈Çu [lb, ub]
+			Xopt.fit_fun(ff, ud1, ud2);							// obliczmy warto≈õƒá funkcji celu
 			if (Xopt.y < epsilon)								// sprawdzmy 1. kryterium stopu
 			{
-				Xopt.flag = 1;									// flaga = 1 ozancza znalezienie rozwiπzanie z zadanπ dok≥adnoúciπ
+				Xopt.flag = 1;									// flaga = 1 ozancza znalezienie rozwiƒÖzanie z zadanƒÖ dok≈Çadno≈õciƒÖ
 				break;
 			}
 			if (solution::f_calls > Nmax)						// sprawdzmy 2. kryterium stopu
 			{
-				Xopt.flag = 0;									// flaga = 0 ozancza przekroczenie maksymalne liczby wywo≥aÒ funkcji celu
+				Xopt.flag = 0;									// flaga = 0 ozancza przekroczenie maksymalne liczby wywo≈Ça≈Ñ funkcji celu
 				break;
 			}
 		}
@@ -36,62 +36,77 @@ solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, do
 		throw ("solution MC(...):\n" + ex_info);
 	}
 }
-
-double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, double alpha, int Nmax, matrix ud1, matrix ud2)
+double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, double alpha, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
-		double* p = new double[2] { 0, 0 };
+		double* p = new double[2] {0, 0};
+
+		solution::clear_calls();
 
 		int i = 0;
-		solution Xopt0 = x0;;
-		solution Xopt1(x0 + d);
-		Xopt0.fit_fun(ff, ud1, ud2);
-		Xopt1.fit_fun(ff, ud1, ud2);
-		
+		solution Xopt_prev(x0);
+		solution Xopt_curr(x0 + d);
 
-		if (Xopt1.y == Xopt0.y)
+		Xopt_prev.fit_fun(ff, ud1, ud2);
+		Xopt_curr.fit_fun(ff, ud1, ud2);
+
+		double f_prev = m2d(Xopt_prev.y);
+		double f_curr = m2d(Xopt_curr.y);
+
+		if (fabs(f_curr - m2d(Xopt_prev.y)) < epsilon)
 		{
-			p[0] = m2d(Xopt0.x);
-			p[1] = m2d(Xopt1.x);
+			p[0] = m2d(Xopt_prev.x);
+			p[1] = m2d(Xopt_curr.x);
 			return p;
 		}
 
-		if (Xopt0.y > Xopt0.y)
+		if (f_curr > f_prev)
 		{
 			d = -d;
-			Xopt1.x = Xopt0.x + d;
+			Xopt_curr.x = Xopt_prev.x + d;
+			Xopt_curr.fit_fun(ff, ud1, ud2);
+			f_curr = m2d(Xopt_curr.y);
 
-			Xopt1.fit_fun(ff, ud1, ud2);
-			if (Xopt0.y >= Xopt0.y)
+			if (f_curr >= f_prev)
 			{
-				p[0] = m2d(Xopt1.x);
-				p[1] = m2d(Xopt0.x);
+				p[0] = m2d(Xopt_curr.x);
+				p[1] = x0 - d;
 				return p;
 			}
 		}
 
-		double xMin1=0;
+		double x_i_minus_1 = m2d(Xopt_curr.x);
 
-		while (Xopt0.y<=Xopt1.y)
+		while (f_prev > f_curr)
 		{
-			if (Xopt1.f_calls > Nmax)
-				break;
+			if (solution::f_calls >= Nmax)
+			{
+				Xopt_prev.flag = 0;
+				throw std::string("Exceeded maximum number of function calls");
+			}
+
 			i++;
-			xMin1 = m2d(Xopt1.x);
-			Xopt1.x = Xopt0.x + pow(alpha, i) * d;
-			Xopt1.fit_fun(ff, ud1, ud2);
+			x_i_minus_1 = m2d(Xopt_curr.x);
+
+			Xopt_curr.x = Xopt_prev.x + pow(alpha, i) * d;
+			Xopt_curr.fit_fun(ff, ud1, ud2);
+
+			f_prev = f_curr;
+			f_curr = m2d(Xopt_curr.y);
 		}
 
 		if (d > 0)
 		{
-			p[0] = xMin1;
-			p[1] = m2d(Xopt1.x);
-			return p;
+			p[0] = x_i_minus_1;
+			p[1] = m2d(Xopt_curr.x);
+		}
+		else
+		{
+			p[0] = m2d(Xopt_curr.x);
+			p[1] = x_i_minus_1;
 		}
 
-		p[0] = m2d(Xopt1.x);
-		p[1] = xMin1;
 		return p;
 	}
 	catch (string ex_info)
