@@ -36,75 +36,69 @@ solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, do
 		throw ("solution MC(...):\n" + ex_info);
 	}
 }
-double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, double alpha, double epsilon, int Nmax, matrix ud1, matrix ud2)
+
+double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, double alpha, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
-		double* p = new double[2] {0, 0};
-
-		solution::clear_calls();
+		double* p = new double[2] { 0, 0 };
 
 		int i = 0;
-		solution Xopt_prev(x0);
-		solution Xopt_curr(x0 + d);
+		solution Xopt0 = x0;
+		solution Xopt1(x0 + d);
 
-		Xopt_prev.fit_fun(ff, ud1, ud2);
-		Xopt_curr.fit_fun(ff, ud1, ud2);
+		Xopt0.fit_fun(ff, ud1, ud2);
+		Xopt1.fit_fun(ff, ud1, ud2);
 
-		double f_prev = m2d(Xopt_prev.y);
-		double f_curr = m2d(Xopt_curr.y);
-
-		if (fabs(f_curr - m2d(Xopt_prev.y)) < epsilon)
+		if (Xopt1.y == Xopt0.y)
 		{
-			p[0] = m2d(Xopt_prev.x);
-			p[1] = m2d(Xopt_curr.x);
+			p[0] = m2d(Xopt0.x);
+			p[1] = m2d(Xopt1.x);
 			return p;
 		}
 
-		if (f_curr > f_prev)
+		if (Xopt1.y > Xopt0.y)
 		{
 			d = -d;
-			Xopt_curr.x = Xopt_prev.x + d;
-			Xopt_curr.fit_fun(ff, ud1, ud2);
-			f_curr = m2d(Xopt_curr.y);
+			Xopt1.x = Xopt0.x + d;
 
-			if (f_curr >= f_prev)
+			Xopt1.fit_fun(ff, ud1, ud2);
+			if (Xopt1.y >= Xopt0.y)
 			{
-				p[0] = m2d(Xopt_curr.x);
-				p[1] = x0 - d;
+				p[0] = m2d(Xopt1.x);
+				p[1] = m2d(Xopt0.x - d);
 				return p;
 			}
 		}
 
-		double x_i_minus_1 = m2d(Xopt_curr.x);
-
-		while (f_prev > f_curr)
+		solution Xopt_prev;
+		while (true)
 		{
-			if (solution::f_calls >= Nmax)
+			if (solution::f_calls > Nmax)
 			{
-				Xopt_prev.flag = 0;
-				throw std::string("Exceeded maximum number of function calls");
+				Xopt0.flag = 0;									// flaga = 0 ozancza przekroczenie maksymalne liczby wywołań funkcji celu
+				break;
 			}
 
+			Xopt_prev = Xopt1;
+
 			i++;
-			x_i_minus_1 = m2d(Xopt_curr.x);
+			Xopt1.x = Xopt0.x + pow(alpha, i) * d;
+			Xopt1.fit_fun(ff, ud1, ud2);
 
-			Xopt_curr.x = Xopt_prev.x + pow(alpha, i) * d;
-			Xopt_curr.fit_fun(ff, ud1, ud2);
-
-			f_prev = f_curr;
-			f_curr = m2d(Xopt_curr.y);
+			if (Xopt1.y > Xopt_prev.y) //na ODWROT???? NIE, DZIAŁA JEDNAK!!!!!! OSZALEJE HEHAHAHAHEHAFADOS;IFHA;SDKJ AKSDLASDF
+				break;
 		}
 
 		if (d > 0)
 		{
-			p[0] = x_i_minus_1;
-			p[1] = m2d(Xopt_curr.x);
+			p[0] = m2d(Xopt_prev.x);
+			p[1] = m2d(Xopt1.x);
 		}
 		else
 		{
-			p[0] = m2d(Xopt_curr.x);
-			p[1] = x_i_minus_1;
+			p[0] = m2d(Xopt1.x);
+			p[1] = m2d(Xopt_prev.x);
 		}
 
 		return p;

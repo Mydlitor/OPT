@@ -20,7 +20,6 @@ void lab6();
 
 int main()
 {
-	srand(time(NULL));
 	try
 	{
 		lab1();
@@ -69,14 +68,18 @@ void lab0()
 
 void lab1()
 {
-	double epsilon = 1e-2;									// dok³adnoœæ
-	int Nmax = 10000;
-	double x0 = rand() % 200 - 100;
-	double d = 10;
-	double alpha = 1.5;
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dis(-100, 100);
+	int x0 = dis(gen);
 
-	double* p = expansion(ff1T, x0, d, alpha, epsilon, Nmax);
-	cout << "x0:" << x0 << ",\t" << p[0] << ", " << p[1];
+	int Nmax = 10000;
+	double d = 1;
+	double alpha = 1.2;
+
+	double* p = expansion(ff1T, x0, d, alpha, Nmax);
+	cout << "x0:" << x0 << ",\t[" << p[0] << ", " << p[1] << "]\n";
+	cout << "liczba wywolan funkcji celu: " << solution::f_calls << "\n\n";
 }
 
 void lab2()
