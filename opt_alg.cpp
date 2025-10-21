@@ -41,64 +41,71 @@ double* expansion(matrix(*ff)(matrix, matrix, matrix), double x0, double d, doub
 {
 	try
 	{
-		double* p = new double[2] { 0, 0 };
+		double* p = new double[2]{ 0, 0 };
 
 		int i = 0;
-		solution Xopt0 = x0;
-		solution Xopt1(x0 + d);
 
-		Xopt0.fit_fun(ff, ud1, ud2);
-		Xopt1.fit_fun(ff, ud1, ud2);
+		solution X0(x0);
+		solution X1(x0 + d);
 
-		if (Xopt1.y == Xopt0.y)
+		X0.fit_fun(ff, ud1, ud2);
+		X1.fit_fun(ff, ud1, ud2);
+
+		if (X1.y == X0.y)
 		{
-			p[0] = m2d(Xopt0.x);
-			p[1] = m2d(Xopt1.x);
+			p[0] = X0.x(0);
+			p[1] = X1.x(0);
 			return p;
 		}
 
-		if (Xopt1.y > Xopt0.y)
+		if (X1.y > X0.y)
 		{
 			d = -d;
-			Xopt1.x = Xopt0.x + d;
+			X1.x = x0 + d;
+			X1.fit_fun(ff, ud1, ud2);
 
-			Xopt1.fit_fun(ff, ud1, ud2);
-			if (Xopt1.y >= Xopt0.y)
+			if (X1.y >= X0.y)
 			{
-				p[0] = m2d(Xopt1.x);
-				p[1] = m2d(Xopt0.x - d);
+				p[0] = X1.x(0);
+				p[1] = X0.x(0) - d;
 				return p;
 			}
 		}
 
-		solution Xopt_prev;
-		while (true)
+		solution Xi_prev = X0;
+		solution Xi = X1;
+		solution Xi_next;
+
+		do
 		{
-			if (solution::f_calls > Nmax)
+			if (solution::f_calls >= Nmax)
 			{
-				Xopt0.flag = 0;									// flaga = 0 ozancza przekroczenie maksymalne liczby wywołań funkcji celu
+				throw string("Przekroczono maksymalna liczbe wywolan funkcji celu");
+			}
+
+			i++;
+			Xi_next.x = x0 + pow(alpha, i) * d;
+			Xi_next.fit_fun(ff, ud1, ud2);
+
+			if (Xi.y <= Xi_next.y)
+			{
 				break;
 			}
 
-			Xopt_prev = Xopt1;
+			Xi_prev = Xi;
+			Xi = Xi_next;
 
-			i++;
-			Xopt1.x = Xopt0.x + pow(alpha, i) * d;
-			Xopt1.fit_fun(ff, ud1, ud2);
-
-			if (Xopt1.y > Xopt_prev.y) //na ODWROT???? NIE, DZIAŁA JEDNAK!!!!!! OSZALEJE HEHAHAHAHEHAFADOS;IFHA;SDKJ AKSDLASDF
-				break;
-		}
+		} while (true);
 
 		if (d > 0)
 		{
-			p[0] = m2d(Xopt_prev.x);
-			p[1] = m2d(Xopt1.x);
+			p[0] = Xi_prev.x(0);
+			p[1] = Xi_next.x(0);
 		}
 		else
 		{
-			p[0] = m2d(Xopt1.x);
-			p[1] = m2d(Xopt_prev.x);
+			p[0] = Xi_next.x(0);
+			p[1] = Xi_prev.x(0);
 		}
 
 		return p;

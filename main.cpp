@@ -22,7 +22,8 @@ int main()
 {
 	try
 	{
-		lab1();
+		for(int i = 0; i<50; i++)
+			lab1();
 	}
 	catch (string EX_INFO)
 	{
@@ -71,13 +72,16 @@ void lab1()
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<> dis(-100, 100);
+	//std::uniform_int_distribution<> dis(58, 66);
 	int x0 = dis(gen);
 
 	int Nmax = 10000;
-	double d = 1;
-	double alpha = 1.2;
+	double d = 1.5;
+	double alpha = 1.1;
 
+	solution::clear_calls();
 	double* p = expansion(ff1T, x0, d, alpha, Nmax);
+
 	cout << "x0:" << x0 << ",\t[" << p[0] << ", " << p[1] << "]\n";
 	cout << "liczba wywolan funkcji celu: " << solution::f_calls << "\n\n";
 }
