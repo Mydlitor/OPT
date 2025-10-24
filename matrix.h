@@ -9,6 +9,8 @@
 #include<random>
 #include<chrono>
 #include<cstdlib>
+#include<iomanip>
+#include<algorithm>
 
 #define _USE_MATH_DEFINES
 #include<math.h>

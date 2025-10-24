@@ -11,18 +11,18 @@ Data ostatniej modyfikacji: 30.09.2025
 #include"opt_alg.h"
 
 void lab0();
-void lab1();
+void lab1(int aN);
 void lab2();
 void lab3();
 void lab4();
 void lab5();
 void lab6();
 
-int main()
+int main(int argc, char* argv[])
 {
 	try
 	{
-		lab1();
+		lab1(atoi(argv[1]));
 	}
 	catch (string EX_INFO)
 	{
@@ -66,10 +66,14 @@ void lab0()
 	Y[1].~matrix();
 }
 
-void lab1()
+void lab1(int aN)
 {
+	//DANE
 	double alpha[] = { 1.1, 1.5, 2.0 };
-	int aN = 0;
+
+	aN = std::clamp(aN, 0, 2);
+
+	cout << aN << "\n";
 
 	solution opt;
 	int Nmax = 1000;
@@ -80,32 +84,40 @@ void lab1()
 
 	matrix cel = matrix(50.0);
 
+	int x0 = 0;
+
+	int ld = -100, ud = 100;
+
+	double* p;
+
+	cout.precision(10);
+
 	for (int i = 0; i < 100; i++)
 	{
-		//DANE
-		solution::clear_calls();
-
+		//LOSOWANIE PUNKTU POCZATKOWEGO
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_int_distribution<> dis(-100, 100);
-		int x0 = dis(gen);
+		std::uniform_int_distribution<> dis(ld, ud);
+		x0 = dis(gen);
 
 		//EKSPANSJA
-		double* p = expansion(ff1R, x0, d, alpha[aN], Nmax, cel);
-		cout << x0 << "," << p[0] << "," << p[1] << "," << solution::f_calls << ",";
 		solution::clear_calls();
-
+		p = expansion(ff1R, x0, d, alpha[aN], Nmax, cel);
+		cout << fixed << x0 << "," << p[0] << "," << p[1] << "," << solution::f_calls << ",";
+		
 		//FIBONACCI
-		opt = fib(ff1R, p[0], p[1], epsilon, cel);
-		cout << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << "," << "\n";
-
 		solution::clear_calls();
+		opt = fib(ff1R, p[0], p[1], epsilon, cel);
+		cout << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << ",";
+		
 
 		//LAGRANGE 
-		// Poprawka: inicjalizacja macierzy o rozmiarze 1x1 z wartością 50.0
-		//opt = lag(ff1R, 1, 100, epsilon, gamma, Nmax, matrix(50.0), NAN);
-
+		solution::clear_calls();
+		opt = lag(ff1R, p[0], p[1], epsilon, gamma, Nmax, matrix(50.0), NAN);
+		cout << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << "\n";
 	}
+
+	delete p;
 }
 
 void lab2()
