@@ -68,43 +68,44 @@ void lab0()
 
 void lab1()
 {
-	 std::random_device rd;
-	 std::mt19937 gen(rd());
-	 std::uniform_int_distribution<> dis(-100, 100);
-	 //std::uniform_int_distribution<> dis(58, 66);
-	 int x0 = dis(gen);
+	double alpha[] = { 1.1, 1.5, 2.0 };
+	int aN = 0;
 
-	 int Nmax = 10000;
-	 double d = 1.5;
-	 double alpha[] = { 1.1, 1.5, 2.0 };
+	solution opt;
+	int Nmax = 1000;
+	double d = 1.5;
 
-	 solution::clear_calls();
+	double epsilon = 1e-3;
+	double gamma = 1e-6;
 
-	 for (int i = 0; i < 3; i++) {
-		 cout << "Alpha: " << alpha[i] << "\n";
-		 double* p = expansion(ff1T, x0, d, alpha[i], Nmax);
+	matrix cel = matrix(50.0);
 
-		 cout << "ekspansja: x0:" << x0 << ",\t[" << p[0] << ", " << p[1] << "]\n";
-		 cout << "liczba wywolan funkcji celu: " << solution::f_calls << "\n\n";
+	for (int i = 0; i < 100; i++)
+	{
+		//DANE
+		solution::clear_calls();
 
-		 solution::clear_calls();
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> dis(-100, 100);
+		int x0 = dis(gen);
 
-		 double epsilon = 1e-3;
-		 double gamma = 1e-6;
+		//EKSPANSJA
+		double* p = expansion(ff1R, x0, d, alpha[aN], Nmax, cel);
+		cout << x0 << "," << p[0] << "," << p[1] << "," << solution::f_calls << ",";
+		solution::clear_calls();
 
-		 int N_max = 1000;
+		//FIBONACCI
+		opt = fib(ff1R, p[0], p[1], epsilon, cel);
+		cout << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << "," << "\n";
 
-		 solution opt;
+		solution::clear_calls();
 
-		 // Poprawka: inicjalizacja macierzy o rozmiarze 1x1 z wartością 50.0
-		 //opt = lag(ff1R, 1, 100, epsilon, gamma, N_max, matrix(50.0), NAN);
+		//LAGRANGE 
+		// Poprawka: inicjalizacja macierzy o rozmiarze 1x1 z wartością 50.0
+		//opt = lag(ff1R, 1, 100, epsilon, gamma, Nmax, matrix(50.0), NAN);
 
-		 opt = fib(ff1T, p[0], p[1], epsilon);
-		 std::cout <<"x: " << opt.x << " y: " << opt.y << "\n";
-
-		 solution::clear_calls();
-	 }
-	 
+	}
 }
 
 void lab2()

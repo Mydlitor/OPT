@@ -91,7 +91,8 @@ matrix ff1R(matrix x, matrix ud1, matrix ud2)
         if (Y[1](i, 2) > Tmax)
             Tmax = Y[1](i, 2);
     
-    cout << "tmax: " << Tmax << endl;
+    //debug
+    //cout << "tmax: " << Tmax << endl;
 
     // Funkcja celu: różnica względem 50°C (ud1 zawiera cel temperatury)
     y(0,0) = fabs(Tmax - m2d(ud1));
