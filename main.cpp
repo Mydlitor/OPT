@@ -22,8 +22,7 @@ int main()
 {
 	try
 	{
-		for(int i = 0; i<50; i++)
-			lab1();
+		lab1();
 	}
 	catch (string EX_INFO)
 	{
@@ -69,32 +68,43 @@ void lab0()
 
 void lab1()
 {
-	// std::random_device rd;
-	// std::mt19937 gen(rd());
-	// std::uniform_int_distribution<> dis(-100, 100);
-	// //std::uniform_int_distribution<> dis(58, 66);
-	// int x0 = dis(gen);
+	 std::random_device rd;
+	 std::mt19937 gen(rd());
+	 std::uniform_int_distribution<> dis(-100, 100);
+	 //std::uniform_int_distribution<> dis(58, 66);
+	 int x0 = dis(gen);
 
-	// int Nmax = 10000;
-	// double d = 1.5;
-	// double alpha = 1.1;
+	 int Nmax = 10000;
+	 double d = 1.5;
+	 double alpha[] = { 1.1, 1.5, 2.0 };
 
-	// solution::clear_calls();
-	// double* p = expansion(ff1T, x0, d, alpha, Nmax);
+	 solution::clear_calls();
 
-	// cout << "x0:" << x0 << ",\t[" << p[0] << ", " << p[1] << "]\n";
-	// cout << "liczba wywolan funkcji celu: " << solution::f_calls << "\n\n";
+	 for (int i = 0; i < 3; i++) {
+		 cout << "Alpha: " << alpha[i] << "\n";
+		 double* p = expansion(ff1T, x0, d, alpha[i], Nmax);
 
-	double epsilon = 1e-3;
-	double gamma = 1e-6;
-	
-	int N_max = 1000;
-	
-	solution opt;
+		 cout << "ekspansja: x0:" << x0 << ",\t[" << p[0] << ", " << p[1] << "]\n";
+		 cout << "liczba wywolan funkcji celu: " << solution::f_calls << "\n\n";
 
-	// Poprawka: inicjalizacja macierzy o rozmiarze 1x1 z wartością 50.0
-	opt = lag(ff1R, 1, 100, epsilon, gamma, N_max, matrix(50.0), NAN);
-	std::cout << "x: " << opt.x << " y: " << opt.y <<  "\n";
+		 solution::clear_calls();
+
+		 double epsilon = 1e-3;
+		 double gamma = 1e-6;
+
+		 int N_max = 1000;
+
+		 solution opt;
+
+		 // Poprawka: inicjalizacja macierzy o rozmiarze 1x1 z wartością 50.0
+		 //opt = lag(ff1R, 1, 100, epsilon, gamma, N_max, matrix(50.0), NAN);
+
+		 opt = fib(ff1T, p[0], p[1], epsilon);
+		 std::cout <<"x: " << opt.x << " y: " << opt.y << "\n";
+
+		 solution::clear_calls();
+	 }
+	 
 }
 
 void lab2()
