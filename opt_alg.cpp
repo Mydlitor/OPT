@@ -121,7 +121,46 @@ solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
+
+		double phi = (1.0 + sqrt(5.0)) / 2.0;
+		double r_phi = 1.0 / phi;
+
+		int k = 0;
+		double phi_k = 1.0;
+
+		while (phi_k <= (b - a) / epsilon)
+		{
+			phi_k *= phi;
+			k++;
+		}
+
+		solution A(a), B(b), C, D;
+
+		C.x = B.x - r_phi * (B.x - A.x);
+		D.x = A.x + B.x - C.x;
+
+		C.fit_fun(ff, ud1, ud2);
+		D.fit_fun(ff, ud1, ud2);
+
+		for (int i = 0; i <= k - 3; i++)
+		{
+			if (C.y < D.y)
+			{
+				B = D;
+			}
+			else
+			{
+				A = C;
+			}
+
+			C.x = B.x - r_phi * (B.x - A.x);
+			D.x = A.x + B.x - C.x;
+
+			C.fit_fun(ff, ud1, ud2);
+			D.fit_fun(ff, ud1, ud2);
+		}
+
+		Xopt = C;
 
 		return Xopt;
 	}
@@ -129,7 +168,6 @@ solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 	{
 		throw ("solution fib(...):\n" + ex_info);
 	}
-
 }
 
 solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, double gamma, int Nmax, matrix ud1, matrix ud2)
