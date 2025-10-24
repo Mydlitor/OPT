@@ -174,9 +174,73 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 {
 	try
 	{
+		double* interval = expansion(ff, a, 2, 1.01, Nmax, ud1, ud2);
 		solution Xopt;
-		//Tu wpisz kod funkcji
+		solution::clear_calls();
 
+		double aa = interval[0];
+		double bb = interval[1];
+		double cc = (interval[1] + interval[0]) / 2;
+		double dd = 0, dd_prev = 0;
+		int iter = 0;
+
+		do {
+			// Oblicz wartości funkcji celu
+			Xopt.x = aa; Xopt.fit_fun(ff, ud1, ud2); double f_a = m2d(Xopt.y);
+			Xopt.x = bb; Xopt.fit_fun(ff, ud1, ud2); double f_b = m2d(Xopt.y);
+			Xopt.x = cc; Xopt.fit_fun(ff, ud1, ud2); double f_c = m2d(Xopt.y);
+
+			// Interpolacja kwadratowa
+			double l = f_a * (pow(bb, 2) - pow(cc, 2)) + f_b * (pow(cc, 2) - pow(aa, 2)) + f_c * (pow(aa, 2) - pow(bb, 2));
+			double m = f_a * (bb - cc) + f_b * (cc - aa) + f_c * (aa - bb);
+			if (m <= 0) throw std::string("M <= 0");
+
+			dd_prev = dd;
+			dd = 0.5 * l / m;
+
+			// Zabezpieczenie przed wyjściem poza przedział
+			if (dd < aa || dd > bb) {
+				//std::cout << "aa: " << aa << ", bb: " << bb << ", cc: " << cc << ", dd: " << dd << std::endl;
+				throw std::string("dd poza przedziałem!");
+			}
+
+			Xopt.x = dd; Xopt.fit_fun(ff, ud1, ud2); double f_d = m2d(Xopt.y);
+
+			// Warunki wyboru nowego przedziału
+			if ((aa < dd) && (dd < cc)) {
+				if (f_d < f_c) {
+					bb = cc;
+					cc = dd;
+				}
+				else {
+					aa = dd;
+				}
+			}
+			else if ((cc < dd) && (dd < bb)) {
+				if (f_d < f_c) {
+					aa = cc;
+					cc = dd;
+				}
+				else {
+					bb = dd;
+				}
+			}
+			else {
+				// Zabezpieczenie przed zdegenerowaniem przedziału
+				if (fabs(bb - aa) < epsilon || fabs(dd - dd_prev) < gamma) break;
+				throw std::string("Error 4321");
+			}
+
+			iter++;
+			if (solution::f_calls > Nmax) throw std::string("Too many iterations");
+
+			// Warunek zbieżności
+			if (fabs(bb - aa) < epsilon || fabs(dd - dd_prev) < gamma) break;
+
+		} while (true);
+
+		Xopt.x = dd;
+		Xopt.fit_fun(ff, ud1, ud2);
 		return Xopt;
 	}
 	catch (string ex_info)

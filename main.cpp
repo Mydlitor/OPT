@@ -73,8 +73,6 @@ void lab1(int aN)
 
 	aN = std::clamp(aN, 0, 2);
 
-	cout << aN << "\n";
-
 	solution opt;
 	int Nmax = 1000;
 	double d = 1.5;
@@ -113,7 +111,13 @@ void lab1(int aN)
 
 		//LAGRANGE 
 		solution::clear_calls();
-		opt = lag(ff1R, p[0], p[1], epsilon, gamma, Nmax, matrix(50.0), NAN);
+		try {
+			opt = lag(ff1R, p[0], p[1], epsilon, gamma, Nmax, matrix(50.0), NAN);
+		}
+		catch (string ex_info) {
+			cout << "error,error,error,\n";
+			continue;
+		}
 		cout << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << "\n";
 	}
 
