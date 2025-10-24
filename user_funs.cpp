@@ -2,24 +2,24 @@
 
 matrix ff0T(matrix x, matrix ud1, matrix ud2)				// funkcja celu dla przypadku testowego
 {
-	matrix y;												// y zawiera wartoœæ funkcji celu
-	y = pow(x(0) - ud1(0), 2) + pow(x(1) - ud1(1), 2);		// ud1 zawiera wspó³rzêdne szukanego optimum
+	matrix y;												// y zawiera wartoï¿½ï¿½ funkcji celu
+	y = pow(x(0) - ud1(0), 2) + pow(x(1) - ud1(1), 2);		// ud1 zawiera wspï¿½rzï¿½dne szukanego optimum
 	return y;
 }
 
 matrix ff0R(matrix x, matrix ud1, matrix ud2)				// funkcja celu dla problemu rzeczywistego
 {
-	matrix y;												// y zawiera wartoœæ funkcji celu
-	matrix Y0 = matrix(2, 1),								// Y0 zawiera warunki pocz¹tkowe
-		MT = matrix(2, new double[2] { m2d(x), 0.5 });		// MT zawiera moment si³y dzia³aj¹cy na wahad³o oraz czas dzia³ania
-	matrix* Y = solve_ode(df0, 0, 0.1, 10, Y0, ud1, MT);	// rozwi¹zujemy równanie ró¿niczkowe
-	int n = get_len(Y[0]);									// d³ugoœæ rozwi¹zania
-	double teta_max = Y[1](0, 0);							// szukamy maksymalnego wychylenia wahad³a
+	matrix y;												// y zawiera wartoï¿½ï¿½ funkcji celu
+	matrix Y0 = matrix(2, 1),								// Y0 zawiera warunki poczï¿½tkowe
+		MT = matrix(2, new double[2] { m2d(x), 0.5 });		// MT zawiera moment siï¿½y dziaï¿½ajï¿½cy na wahadï¿½o oraz czas dziaï¿½ania
+	matrix* Y = solve_ode(df0, 0, 0.1, 10, Y0, ud1, MT);	// rozwiï¿½zujemy rï¿½wnanie rï¿½niczkowe
+	int n = get_len(Y[0]);									// dï¿½ugoï¿½ï¿½ rozwiï¿½zania
+	double teta_max = Y[1](0, 0);							// szukamy maksymalnego wychylenia wahadï¿½a
 	for (int i = 1; i < n; ++i)
 		if (teta_max < Y[1](i, 0))
 			teta_max = Y[1](i, 0);
-	y = abs(teta_max - m2d(ud1));							// wartoœæ funkcji celu (ud1 to za³o¿one maksymalne wychylenie)
-	Y[0].~matrix();											// usuwamy z pamiêci rozwi¹zanie RR
+	y = abs(teta_max - m2d(ud1));							// wartoï¿½ï¿½ funkcji celu (ud1 to zaï¿½oï¿½one maksymalne wychylenie)
+	Y[0].~matrix();											// usuwamy z pamiï¿½ci rozwiï¿½zanie RR
 	Y[1].~matrix();
 	return y;
 }
@@ -29,8 +29,8 @@ matrix df0(double t, matrix Y, matrix ud1, matrix ud2)
 	matrix dY(2, 1);										// definiujemy wektor pochodnych szukanych funkcji
 	double m = 1, l = 0.5, b = 0.5, g = 9.81;				// definiujemy parametry modelu
 	double I = m * pow(l, 2);
-	dY(0) = Y(1);																// pochodna z po³o¿enia to prêdkoœæ
-	dY(1) = ((t <= ud2(1)) * ud2(0) - m * g * l * sin(Y(0)) - b * Y(1)) / I;	// pochodna z prêdkoœci to przyspieszenie
+	dY(0) = Y(1);																// pochodna z poï¿½oï¿½enia to prï¿½dkoï¿½ï¿½
+	dY(1) = ((t <= ud2(1)) * ud2(0) - m * g * l * sin(Y(0)) - b * Y(1)) / I;	// pochodna z prï¿½dkoï¿½ci to przyspieszenie
 	return dY;
 }
 
@@ -40,4 +40,69 @@ matrix ff1T(matrix x, matrix ud1, matrix ud2)
 	double exponent = -1 * pow((0.1 * m2d(x) - 2 * M_PI), 2);
 	y = -cos(0.1 * m2d(x)) * exp(exponent) + 0.002 * pow((0.1 * m2d(x)), 2);
 	return y;
+}
+
+
+matrix df1(double x, matrix Y, matrix ud1, matrix ud2)
+{
+    // Y = [Va, Vb, Tb]
+    matrix dY(3, 1);
+    double a = 0.98, b = 0.63, g = 9.81;
+    double Pa = 2.0, Pb = 1.0;
+    double Ta = 95.0;                 // temperatura w zbiorniku A
+    double Tin = 20.0;                // temperatura dopÅ‚ywu z zewnÄ…trz
+    double Fin = 0.01;                // dopÅ‚yw z zewnÄ…trz [m^3/s]
+    double Db = 0.00365665;           // [m^2]
+
+    double Da = m2d(ud1);             // [m^2] pole otworu miÄ™dzy A a B
+
+    double Fa_out = a*b*Da*sqrt((2*g*Y(0))/Pa);       // wypÅ‚yw z A do B
+    double Fb_out = a*b*Db*sqrt((2*g*Y(1))/Pb);       // wypÅ‚yw z B na zewnÄ…trz
+
+    // RÃ³wnania rÃ³Å¼niczkowe:
+    dY(0) = -Fa_out;
+    dY(1) = Fa_out + Fin - Fb_out;
+    dY(2) = (Fin/Y(1))*(Tin - Y(2)) + (Fa_out/Y(1))*(Ta - Y(2));
+
+    return dY;
+}
+
+
+matrix ff1R(matrix x, matrix ud1, matrix ud2)
+{
+    // x - wektor argumentÃ³w (x(0) = D_A w cm^2)
+    // ud1, ud2 - nieuÅ¼ywane (opcjonalne)
+    
+    matrix y(1,1);
+    matrix Y0 = matrix(3, 1);
+    Y0(0) = 5.0;    // Va0 [m^3]
+    Y0(1) = 1.0;    // Vb0 [m^3]
+    Y0(2) = 20.0;   // Tb0 [Â°C]
+    
+    // RozwiÄ…zanie ODE
+    matrix* Y = solve_ode(df1, 0.0, 1.0, 2000.0, Y0, x, NULL);
+
+    // Poprawka: dÅ‚ugoÅ›Ä‡ (liczba krokÃ³w) pobierana z wektora czasu Y[0]
+    int n = get_len(Y[0]); // liczba wierszy (krokÃ³w czasowych)
+    if (n <= 0) {
+        // jawny komunikat w razie bÅ‚Ä™dnego/niepeÅ‚nego rozwiÄ…zania ODE
+        Y[0].~matrix();
+        Y[1].~matrix();
+        throw string("ff1R: nieprawidlowe rozwiazanie ODE (n <= 0)");
+    }
+    
+    // Szukamy maksymalnej temperatury w zbiorniku B -> trzecia zmienna stanu to kolumna 2
+    double Tmax = Y[1](0, 2);
+    for (int i = 1; i < n; ++i)
+        if (Y[1](i, 2) > Tmax)
+            Tmax = Y[1](i, 2);
+    
+    // Funkcja celu: rÃ³Å¼nica wzglÄ™dem 50Â°C (ud1 zawiera cel temperatury)
+    y(0,0) = fabs(Tmax - m2d(ud1));
+    
+    // Zwalniamy pamiÄ™Ä‡ macierzy zgodnie z innymi funkcjami w projekcie
+    Y[0].~matrix();
+    Y[1].~matrix();
+    
+    return y;
 }
