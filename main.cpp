@@ -70,24 +70,21 @@ void lab1(int aN)
 {
 #pragma region zadanie
 	//DANE
-	double alpha[] = { 1.1, 1.5, 2.0 };
-
-	aN = std::clamp(aN, 0, 2);
-
+	aN = std::clamp(aN, 0, 2); //wybor alpha
 	solution opt;
 	int Nmax = 1000;
-	double d = 1.5;
-
-	double epsilon = 1e-3;
-	double gamma = 1e-6;
-
 	matrix cel = matrix(50.0);
-
 	int x0 = 0;
 
+	//ekspansja
 	int ld = 0, ud = 100;
+	double alpha[] = { 1.1, 1.5, 2.0 };
+	double d = 1.5;
+	double* p; //uzywane do obu jako przedzial
 
-	double* p;
+	//lagrange
+	double epsilon = 1e-3; //dla fib i lag
+	double gamma = 1e-6;
 
 	cout.precision(10);
 
@@ -116,7 +113,7 @@ void lab1(int aN)
 		//LAGRANGE 
 		solution::clear_calls();
 		try {
-			opt = lag(ff1R, ld, ud, epsilon, gamma, Nmax, matrix(50.0), NAN);
+			opt = lag(ff1R, ld, ud, epsilon, gamma, Nmax, cel, NAN);
 		}
 		catch (string ex_info) {
 			cout << "error,error,error,\n";

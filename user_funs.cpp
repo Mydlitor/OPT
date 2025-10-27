@@ -57,16 +57,16 @@ matrix df1(double x, matrix Y, matrix ud1, matrix ud2)
     double Da = m2d(ud1)*0.0001;             // [m^2] pole otworu między A a B
 
 
-    double dupa = (2 * g * Y(0)) / Pa;
-	if (dupa < 0) 
-        dupa = 0.0;
-    double Fa_out = a * b * Da * sqrt(dupa);   // wypływ z A do B
+    double As_S = (2 * g * Y(0)) / Pa;
+	if (As_S < 0) 
+        As_S = 0.0;
+    double Fa_out = a * b * Da * sqrt(As_S);   // wypływ z A do B
     
-    dupa = (2 * g * Y(1)) / Pb;
-	if (dupa < 0)
-		dupa = 0.0;
+    As_S = (2 * g * Y(1)) / Pb;
+	if (As_S < 0)
+		As_S = 0.0;
 
-    double Fb_out = a * b * Db * sqrt(dupa);    // wypływ z B na zewnątrz
+    double Fb_out = a * b * Db * sqrt(As_S);    // wypływ z B na zewnątrz
 
     // Równania różniczkowe:
     dY(0) = -Fa_out;
