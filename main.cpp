@@ -68,6 +68,7 @@ void lab0()
 
 void lab1(int aN)
 {
+#pragma region zadanie
 	//DANE
 	double alpha[] = { 1.1, 1.5, 2.0 };
 
@@ -84,13 +85,15 @@ void lab1(int aN)
 
 	int x0 = 0;
 
-	int ld = -100, ud = 100;
+	int ld = 0, ud = 100;
 
 	double* p;
 
 	cout.precision(10);
 
-	for (int i = 0; i < 100; i++)
+	int n = 1;
+
+	for (int i = 0; i < n; i++)
 	{
 		//LOSOWANIE PUNKTU POCZATKOWEGO
 		std::random_device rd;
@@ -101,27 +104,43 @@ void lab1(int aN)
 		//EKSPANSJA
 		solution::clear_calls();
 		p = expansion(ff1R, x0, d, alpha[aN], Nmax, cel);
-		cout << fixed << x0 << "," << p[0] << "," << p[1] << "," << solution::f_calls << ",";
-		
+		cout << "Ekspansja: ";
+		cout << fixed << x0 << "," << p[0] << "," << p[1] << "," << solution::f_calls << ",\n";
+
 		//FIBONACCI
 		solution::clear_calls();
 		opt = fib(ff1R, p[0], p[1], epsilon, cel);
-		cout << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << ",";
-		
+		cout << "Fibonacci: ";
+		cout << fixed << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << "\n";
 
 		//LAGRANGE 
 		solution::clear_calls();
 		try {
-			opt = lag(ff1R, p[0], p[1], epsilon, gamma, Nmax, matrix(50.0), NAN);
+			opt = lag(ff1R, ld, ud, epsilon, gamma, Nmax, matrix(50.0), NAN);
 		}
 		catch (string ex_info) {
 			cout << "error,error,error,\n";
 			continue;
 		}
-		cout << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << "\n";
+		cout << "Lagrange: ";
+		cout << fixed << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << "\n";
 	}
-
 	delete p;
+#pragma endregion
+
+#pragma region symulacja
+	double xFab = 20.1374350875;
+	double xLag = 20.1380339112;
+
+	matrix Y0 = matrix(3, 1);
+	Y0(0) = 5.0;
+	Y0(1) = 1.0;
+	Y0(2) = 20.0;
+
+	matrix* Y = solve_ode(df1, 0.0, 1.0, 2000.0, Y0, matrix(xLag), NAN);
+
+	cout << hcat(Y[0], Y[1]) << endl;
+#pragma endregion
 }
 
 void lab2()

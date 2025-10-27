@@ -56,8 +56,17 @@ matrix df1(double x, matrix Y, matrix ud1, matrix ud2)
 
     double Da = m2d(ud1)*0.0001;             // [m^2] pole otworu między A a B
 
-    double Fa_out = a*b*Da*sqrt((2*g*Y(0))/Pa);       // wypływ z A do B
-    double Fb_out = a*b*Db*sqrt((2*g*Y(1))/Pb);       // wypływ z B na zewnątrz
+
+    double dupa = (2 * g * Y(0)) / Pa;
+	if (dupa < 0) 
+        dupa = 0.0;
+    double Fa_out = a * b * Da * sqrt(dupa);   // wypływ z A do B
+    
+    dupa = (2 * g * Y(1)) / Pb;
+	if (dupa < 0)
+		dupa = 0.0;
+
+    double Fb_out = a * b * Db * sqrt(dupa);    // wypływ z B na zewnątrz
 
     // Równania różniczkowe:
     dY(0) = -Fa_out;
@@ -96,8 +105,6 @@ matrix ff1R(matrix x, matrix ud1, matrix ud2)
 
     // Funkcja celu: różnica względem 50°C (ud1 zawiera cel temperatury)
     y(0,0) = fabs(Tmax - m2d(ud1));
-    
-	//cout << m2d(y) << endl;
     
     // Zwalniamy pamięć macierzy zgodnie z innymi funkcjami w projekcie
     Y[0].~matrix();

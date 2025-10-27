@@ -158,6 +158,9 @@ solution fib(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 
 			C.fit_fun(ff, ud1, ud2);
 			D.fit_fun(ff, ud1, ud2);
+
+			//debug - wielkosc przedzialu w zaleznosci od iteracji
+			//cout << fabs(C.x(0) - D.x(0)) << "\n";
 		}
 
 		Xopt = C;
@@ -174,7 +177,8 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 {
 	try
 	{
-		double* interval = expansion(ff, a, 2, 1.01, Nmax, ud1, ud2);
+		//double* interval = expansion(ff, a, 2, 1.01, Nmax, ud1, ud2);
+		double interval[2] = {a,b};
 		solution Xopt;
 		solution::clear_calls();
 
@@ -236,6 +240,9 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 
 			// Warunek zbieżności
 			if (fabs(bb - aa) < epsilon || fabs(dd - dd_prev) < gamma) break;
+
+			//debug - wielkosc przedzialu w zaleznosci od iteracji
+			//cout << fabs(aa-bb) << "\n";
 
 		} while (true);
 
