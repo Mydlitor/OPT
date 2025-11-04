@@ -349,18 +349,179 @@ solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), matrix XB, double s, matr
 	}
 }
 
-solution Rosen(matrix(*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
+solution Rosen(matrix (*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
+
+		int n = get_len(x0);
+		int i = 0;
+
+		matrix D(n, n);
+		for (int j = 0; j < n; j++)
+		{
+			for (int k = 0; k < n; k++)
+			{
+				D(k, j) = (j == k) ? 1.0 : 0.0;
+			}
+		}
+
+		matrix s = s0;
+		matrix lambda(n, 1);
+		matrix p(n, 1);
+
+		for (int j = 0; j < n; j++)
+		{
+			lambda(j) = 0.0;
+			p(j) = 0.0;
+		}
+
+		solution xB(x0);
+		xB.fit_fun(ff, ud1, ud2);
+
+		while (true)
+		{
+			for (int j = 0; j < n; j++)
+			{
+				matrix d_j(n, 1);
+				for (int k = 0; k < n; k++)
+				{
+					d_j(k) = D(k, j);
+				}
+
+				matrix x_new = xB.x + s(j) * d_j;
+				solution xNew(x_new);
+				xNew.fit_fun(ff, ud1, ud2);
+
+				if (xNew.y(0) < xB.y(0))
+				{
+					xB.x = xNew.x;
+					xB.y = xNew.y;
+					lambda(j) = lambda(j) + s(j);
+					s(j) = alpha * s(j);
+				}
+				else
+				{
+					s(j) = -beta * s(j);
+					p(j) = p(j) + 1;
+				}
+			}
+
+			i++;
+
+			bool all_lambda_nonzero = true;
+			bool all_p_nonzero = true;
+
+			for (int j = 0; j < n; j++)
+			{
+				if (lambda(j) == 0.0)
+					all_lambda_nonzero = false;
+				if (p(j) == 0.0)
+					all_p_nonzero = false;
+			}
+
+			if (all_lambda_nonzero && all_p_nonzero)
+			{
+				matrix Q(n, n);
+				for (int row = 0; row < n; row++)
+				{
+					for (int col = 0; col < n; col++)
+					{
+						if (row >= col)
+						{
+							Q(row, col) = lambda(col);
+						}
+						else
+						{
+							Q(row, col) = 0.0;
+						}
+					}
+				}
+
+				matrix Q_star = D * Q;
+
+				for (int j = 0; j < n; j++)
+				{
+					matrix v_j(n, 1);
+					for (int k = 0; k < n; k++)
+					{
+						v_j(k) = Q_star(k, j);
+					}
+
+					for (int k = 0; k < j; k++)
+					{
+						matrix d_k(n, 1);
+						for (int l = 0; l < n; l++)
+						{
+							d_k(l) = D(l, k);
+						}
+
+						double dot_product = 0.0;
+						for (int l = 0; l < n; l++)
+						{
+							dot_product += v_j(l) * d_k(l);
+						}
+
+						for (int l = 0; l < n; l++)
+						{
+							v_j(l) -= dot_product * d_k(l);
+						}
+					}
+
+					double norm_val = 0.0;
+					for (int k = 0; k < n; k++)
+					{
+						norm_val += v_j(k) * v_j(k);
+					}
+					norm_val = sqrt(norm_val);
+
+					if (norm_val > 1e-10)
+					{
+						for (int k = 0; k < n; k++)
+						{
+							D(k, j) = v_j(k) / norm_val;
+						}
+					}
+				}
+
+				for (int j = 0; j < n; j++)
+				{
+					lambda(j) = 0.0;
+					p(j) = 0.0;
+					s(j) = s0(j);
+				}
+			}
+
+			if (solution::f_calls > Nmax)
+			{
+				Xopt = xB;
+				Xopt.flag = 0;
+				return Xopt;
+			}
+
+			double max_s = 0.0;
+			for (int j = 0; j < n; j++)
+			{
+				double abs_s = fabs(s(j));
+				if (abs_s > max_s)
+					max_s = abs_s;
+			}
+
+			if (max_s < epsilon)
+			{
+				break;
+			}
+		}
+
+		Xopt = xB;
+		Xopt.flag = 1;
 
 		return Xopt;
 	}
 	catch (string ex_info)
 	{
-		throw ("solution Rosen(...):\n" + ex_info);
+		throw("solution Rosen(...):\n" + ex_info);
 	}
 }
 

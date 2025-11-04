@@ -142,20 +142,66 @@ void lab1(int aN)
 
 void lab2()
 {
+	// matrix xy_start(2, 1, 100.0);
 	
-	matrix xy_start(2, 1, 100.0);
-	
-	double step_size = 1.0;
-	double alfa = 0.8;
-	double epsilon = 1e-3;
+	// double step_size = 1.0;
+	// double alfa = 0.8;
+	// double epsilon = 1e-3;
 
-	int max_n = 1000;
+	// int max_n = 1000;
+
+	// solution opt;
+
+	// opt = HJ(ff2T, xy_start, step_size, alfa, epsilon, max_n);
+	
+	// std::cout << "X: " << opt.x(0) << " Y: " << opt.x(1) << ", f(x,y): " << opt.y << "\n";
+
+	double alpha = 2.0;
+	double beta = 0.5;
+	double epsilon = 1e-6;
+	int Nmax = 1000;
+
+	double step_sizes[3] = {0.01, 0.036, 0.876};
+	int n = 100;
 
 	solution opt;
 
-	opt = HJ(ff2T, xy_start, step_size, alfa, epsilon, max_n);
-	
-	std::cout << "X: " << opt.x(0) << " Y: " << opt.x(1) << ", f(x,y): " << opt.y << "\n";
+	ofstream Sout("tabela1_lab2.csv");
+
+	// cout << "Lp.,x1,x2,x1*,x2*,y*,f_calls" << endl;
+	Sout << "Lp.,x1,x2,x1*,x2*,y*,f_calls,,x1*,x2*,y*,f_calls" << endl;
+
+	for(int step = 0; step < 3; step++)
+	{
+		double s = step_sizes[step];
+
+		for (int i = 0; i < n; i++)
+		{
+			matrix x0 = rand_mat(2);
+
+			for (int j = 0; j < 2; ++j)
+				x0(j) = -1.0 + 2.0 * x0(j);
+			
+			matrix s0(2, 1);
+			s0(0) = s;
+			s0(1) = s;
+
+			// cout << (i + 1) << ",";
+			Sout << (i + 1) << "," << x0(0) << "," << x0(1);
+
+			// METODA HOOKE'A JEEVESA
+			// solution::clear_calls();
+
+			// METODA ROSENBROCKA
+			solution::clear_calls();
+			opt = Rosen(ff2T, x0, s0, alpha, beta, epsilon, Nmax);
+
+			// cout << x0(0) << "," << x0(1) << "," << opt.x(0) << "," << opt.x(1) << "," << opt.y(0) << "," << opt.f_calls << endl;
+			Sout << "," << opt.x(0) << "," << opt.x(1) << "," << opt.y(0) << "," << opt.f_calls << endl;
+		}
+	}
+
+	Sout.close();
 }
 
 void lab3()
