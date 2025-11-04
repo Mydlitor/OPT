@@ -112,3 +112,10 @@ matrix ff1R(matrix x, matrix ud1, matrix ud2)
     
     return y;
 }
+
+matrix ff2T(matrix x, matrix ud1, matrix ud2) {
+    double x1 = m2d(x(0));
+    double x2 = m2d(x(1));
+
+    return matrix(x1*x1 + x2*x2 - cos(2.5*M_PI*x1) - cos(2.5*M_PI*x2) + 2);
+}

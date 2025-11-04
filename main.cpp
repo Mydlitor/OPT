@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
 	try
 	{
-		lab1(atoi(argv[1]));
+		lab2();
 	}
 	catch (string EX_INFO)
 	{
@@ -142,7 +142,20 @@ void lab1(int aN)
 
 void lab2()
 {
+	
+	matrix xy_start(2, 1, 100.0);
+	
+	double step_size = 1.0;
+	double alfa = 0.8;
+	double epsilon = 1e-3;
 
+	int max_n = 1000;
+
+	solution opt;
+
+	opt = HJ(ff2T, xy_start, step_size, alfa, epsilon, max_n);
+	
+	std::cout << "X: " << opt.x(0) << " Y: " << opt.x(1) << ", f(x,y): " << opt.y << "\n";
 }
 
 void lab3()

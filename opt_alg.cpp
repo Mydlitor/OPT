@@ -256,13 +256,54 @@ solution lag(matrix(*ff)(matrix, matrix, matrix), double a, double b, double eps
 	}
 }
 
+matrix sol2mat(solution sol) {
+	matrix ret(2,1);
+	ret(0) = m2d(sol.x);
+	ret(1) = m2d(sol.y);
+	return ret;
+}
+
 solution HJ(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alpha, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
-		solution Xopt;
-		//Tu wpisz kod funkcji
+		matrix x = x0;
+		matrix X_b_prev = x;
+		matrix X_b = x;
 
+		solution Xopt;
+		
+		double f_x, f_xb; //f(x), f(x_b)
+
+		while(s >= epsilon) {
+			X_b = x;
+			x = sol2mat(HJ_trial(ff, X_b, s)); //Convert solution.x, y to matrix (x, y), function ff takes matrix as input.
+			Xopt.x = x; Xopt.fit_fun(ff); f_x = m2d(Xopt.y);
+			Xopt.x = X_b; Xopt.fit_fun(ff); f_xb = m2d(Xopt.y);
+			if (f_x < f_xb) {
+				while (f_x < f_xb) {
+					X_b_prev = X_b;
+					X_b = x;
+					x = 2 * X_b - X_b_prev;
+					x = sol2mat(HJ_trial(ff, x, s));
+					
+					Xopt.x = x; Xopt.fit_fun(ff); f_x = m2d(Xopt.y);
+					Xopt.x = X_b; Xopt.fit_fun(ff); f_xb = m2d(Xopt.y);
+
+					if (solution::f_calls > Nmax) {
+						throw std::string("Dupas zbitas");
+					}
+				}
+				x = X_b;
+			} else {
+				s = alpha * s;
+			}
+			if (solution::f_calls > Nmax) {
+				throw std::string("Dupas zbitas 2");
+			}
+		}
+		Xopt.x = X_b;
+		Xopt.fit_fun(ff);
 		return Xopt;
 	}
 	catch (string ex_info)
@@ -271,13 +312,36 @@ solution HJ(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alp
 	}
 }
 
-solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), solution XB, double s, matrix ud1, matrix ud2)
+solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), matrix XB, double s, matrix ud1, matrix ud2)
 {
 	try
 	{
-		//Tu wpisz kod funkcji
+		matrix ej = ident_mat(2); //spontanicznie przypadkowo maciez jednostkowa pasuje tutaj
 
-		return XB;
+		solution Xopt;
+		double f_x, f_forward, f_backward;
+		
+		for (int i = 0; i < 2; i++) {
+			Xopt.x = XB; 
+			Xopt.fit_fun(ff);
+			f_x = m2d(Xopt.y);
+
+			Xopt.x = XB + s * ej[i]; 
+			Xopt.fit_fun(ff);
+			 f_forward = m2d(Xopt.y);
+
+
+			Xopt.x = XB - s * ej[i]; Xopt.fit_fun(ff); f_backward = m2d(Xopt.y);
+			
+			if (f_forward < f_x) {
+				XB = XB + s*ej[i];
+			} else if (f_backward < f_x) {
+				XB = XB - s*ej[i];
+			}
+		}
+		Xopt.x = XB(0);
+		Xopt.y = XB(1);
+		return Xopt;
 	}
 	catch (string ex_info)
 	{
