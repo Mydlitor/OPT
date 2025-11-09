@@ -150,35 +150,36 @@ matrix df2(double t, matrix Y, matrix ud1, matrix ud2)
 matrix ff2R(matrix x, matrix ud1, matrix ud2)
 {
     matrix y;
-    
+
+    double k1 = m2d(x(0));
+    double k2 = m2d(x(1));
+
+    double alpha_ref = M_PI;
+    double omega_ref = 0.0;
+
+    matrix ref(2, 1);
+    ref(0) = alpha_ref;
+    ref(1) = omega_ref;
+
     matrix Y0(2, 1);
     Y0(0) = 0.0;
     Y0(1) = 0.0;
-    
-    matrix ref(2, 1);
-    ref(0) = M_PI;
-    ref(1) = 0.0;
-    
+
     matrix* Y = solve_ode(df2, 0.0, 0.1, 100.0, Y0, x, ref);
     
     int n = get_len(Y[0]);
     
     double Q = 0.0;
     double dt = 0.1;
-    
+
     for (int i = 0; i < n; i++)
     {
         double alpha = Y[1](i, 0);
         double omega = Y[1](i, 1);
-        
-        double M = x(0) * (M_PI - alpha) + x(1) * (0.0 - omega);
-        
-        double error_alpha = M_PI - alpha;
-        double error_omega = 0.0 - omega;
-        
-        Q += (10.0 * error_alpha * error_alpha + 
-              error_omega * error_omega + 
-              0.01 * M * M) * dt;
+
+        double M = k1 * (alpha_ref - alpha) + k2 * (omega_ref - omega);
+
+        Q += (10.0 * pow(alpha_ref - alpha, 2) + pow(omega_ref - omega, 2) + pow(M, 2)) * dt;
     }
     
     y = Q;

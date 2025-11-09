@@ -155,7 +155,9 @@ void lab2()
 	// opt = HJ(ff2T, xy_start, step_size, alfa, epsilon, max_n);
 	
 	// std::cout << "X: " << opt.x(0) << " Y: " << opt.x(1) << ", f(x,y): " << opt.y << "\n";
-
+	
+	// TESTOWA FUNKCJA CELU
+	
 	double alphaHJ = 0.5;
 	double alphaRos = 2.0;
 	double beta = 0.5;
@@ -205,6 +207,16 @@ void lab2()
 	}
 
 	Sout.close();
+
+
+	// PROBLEM RZECZYWISTY - TEST
+	matrix k(2, 1);
+	k(0) = 5.0;
+	k(1) = 5.0;
+
+	matrix Q = ff2R(k);
+
+	cout << "Q(k1,k2) = " << Q(0) << " (powinna wynosic: okolo 775.229)\n";
 }
 
 void lab3()
