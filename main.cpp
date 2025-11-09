@@ -159,12 +159,12 @@ void lab2()
 	double alpha = 2.0;
 	double beta = 0.5;
 	double epsilon = 1e-6;
-	int Nmax = 1000;
+	int Nmax = 10000;
 
 	double step_sizes[3] = {0.01, 0.036, 0.876};
 	int n = 100;
 
-	solution opt;
+	solution optHJ, optRos;
 
 	ofstream Sout("tabela1_lab2.csv");
 
@@ -190,14 +190,17 @@ void lab2()
 			Sout << (i + 1) << "," << x0(0) << "," << x0(1);
 
 			// METODA HOOKE'A JEEVESA
-			// solution::clear_calls();
-
-			// METODA ROSENBROCKA
 			solution::clear_calls();
-			opt = Rosen(ff2T, x0, s0, alpha, beta, epsilon, Nmax);
+			optHJ = HJ(ff2T, x0, s, alpha, epsilon, Nmax);
 
 			// cout << x0(0) << "," << x0(1) << "," << opt.x(0) << "," << opt.x(1) << "," << opt.y(0) << "," << opt.f_calls << endl;
-			Sout << "," << opt.x(0) << "," << opt.x(1) << "," << opt.y(0) << "," << opt.f_calls << endl;
+			Sout << "," << optHJ.x(0) << "," << optHJ.x(1) << "," << optHJ.y(0) << "," << optHJ.f_calls;
+			
+			// METODA ROSENBROCKA
+			solution::clear_calls();
+			optRos = Rosen(ff2T, x0, s0, alpha, beta, epsilon, Nmax);
+			Sout << ",," << optRos.x(0) << "," << optRos.x(1) << "," << optRos.y(0) << "," << optRos.f_calls << endl;
+		
 		}
 	}
 

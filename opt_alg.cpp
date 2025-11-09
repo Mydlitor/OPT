@@ -290,16 +290,18 @@ solution HJ(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alp
 					Xopt.x = x; Xopt.fit_fun(ff); f_x = m2d(Xopt.y);
 					Xopt.x = X_b; Xopt.fit_fun(ff); f_xb = m2d(Xopt.y);
 
-					if (solution::f_calls > Nmax) {
-						throw std::string("Dupas zbitas");
+					if (solution::f_calls >= Nmax)
+					{
+						throw string("Przekroczono maksymalna liczbe wywolan funkcji celu");
 					}
 				}
 				x = X_b;
 			} else {
 				s = alpha * s;
 			}
-			if (solution::f_calls > Nmax) {
-				throw std::string("Dupas zbitas 2");
+			if (solution::f_calls >= Nmax)
+			{
+				throw string("Przekroczono maksymalna liczbe wywolan funkcji celu");
 			}
 		}
 		Xopt.x = X_b;
