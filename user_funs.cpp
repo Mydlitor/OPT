@@ -119,3 +119,69 @@ matrix ff2T(matrix x, matrix ud1, matrix ud2) {
 
     return matrix(x1*x1 + x2*x2 - cos(2.5*M_PI*x1) - cos(2.5*M_PI*x2) + 2);
 }
+
+matrix df2(double t, matrix Y, matrix ud1, matrix ud2)
+{
+    matrix dY(2, 1);
+    
+    double m = 1.0;     // masa ramienia
+    double mc = 5.0;    // masa ciężarka
+    double l = 2.0;     // długość ramienia
+    double b = 0.25;    // współczynnik tarcia
+
+    // Moment bezwładności
+    double I = m * l * l / 3.0 + mc * l * l;
+    
+    // Parametry regulatora
+    double k1 = m2d(ud1(0));
+    double k2 = m2d(ud1(1));
+    
+    double alpha_ref = m2d(ud2(0));
+    double omega_ref = m2d(ud2(1));
+
+    double M = k1 * (alpha_ref - Y(0)) + k2 * (omega_ref - Y(1));
+
+    dY(0) = Y(1);
+    dY(1) = (M - b * Y(1)) / I;
+    
+    return dY;
+}
+
+matrix ff2R(matrix x, matrix ud1, matrix ud2)
+{
+    matrix y;
+    
+    matrix Y0(2, 1);
+    Y0(0) = 0.0;
+    Y0(1) = 0.0;
+    
+    matrix ref(2, 1);
+    ref(0) = M_PI;
+    ref(1) = 0.0;
+    
+    matrix* Y = solve_ode(df2, 0.0, 0.1, 100.0, Y0, x, ref);
+    
+    int n = get_len(Y[0]);
+    
+    double Q = 0.0;
+    double dt = 0.1;
+    
+    for (int i = 0; i < n; i++)
+    {
+        double alpha = Y[1](i, 0);
+        double omega = Y[1](i, 1);
+        
+        double M = x(0) * (M_PI - alpha) + x(1) * (0.0 - omega);
+        
+        double error_alpha = M_PI - alpha;
+        double error_omega = 0.0 - omega;
+        
+        Q += (10.0 * error_alpha * error_alpha + 
+              error_omega * error_omega + 
+              0.01 * M * M) * dt;
+    }
+    
+    y = Q;
+
+    return y;
+}
