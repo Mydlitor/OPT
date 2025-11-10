@@ -265,6 +265,7 @@ matrix sol2mat(solution sol) {
 
 solution HJ(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alpha, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
+	int iteracja = 0;
 	try
 	{
 		matrix x = x0;
@@ -282,6 +283,8 @@ solution HJ(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alp
 			Xopt.x = X_b; Xopt.fit_fun(ff); f_xb = m2d(Xopt.y);
 			if (f_x < f_xb) {
 				while (f_x < f_xb) {
+					cout << iteracja << "," << Xopt.x(0) << "," << Xopt.x(1) << endl;
+					iteracja++;
 					X_b_prev = X_b;
 					X_b = x;
 					x = 2 * X_b - X_b_prev;
@@ -298,6 +301,8 @@ solution HJ(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alp
 				x = X_b;
 			} else {
 				s = alpha * s;
+				cout << iteracja << "," << Xopt.x(0) << "," << Xopt.x(1) << endl;
+				iteracja++;
 			}
 			if (solution::f_calls >= Nmax)
 			{
@@ -353,6 +358,7 @@ solution HJ_trial(matrix(*ff)(matrix, matrix, matrix), matrix XB, double s, matr
 
 solution Rosen(matrix (*ff)(matrix, matrix, matrix), matrix x0, matrix s0, double alpha, double beta, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
+	int iteracja = 0;
 	try
 	{
 		solution Xopt;
@@ -384,6 +390,8 @@ solution Rosen(matrix (*ff)(matrix, matrix, matrix), matrix x0, matrix s0, doubl
 
 		while (true)
 		{
+			cout << iteracja << "," << xB.x(0) << "," << xB.x(1) << endl;
+			iteracja++;
 			for (int j = 0; j < n; j++)
 			{
 				matrix d_j(n, 1);

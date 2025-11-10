@@ -142,7 +142,7 @@ void lab1(int aN)
 
 void lab2()
 {
-	// matrix xy_start(2, 1, 100.0);
+	/*// matrix xy_start(2, 1, 100.0);
 	
 	// double step_size = 1.0;
 	// double alfa = 0.8;
@@ -169,54 +169,69 @@ void lab2()
 
 	solution optHJ, optRos;
 
-	ofstream Sout("tabela1_lab2.csv");
+	ofstream Sout("tabela3_lab2.csv");
 
 	// cout << "Lp.,x1,x2,x1*,x2*,y*,f_calls" << endl;
 	Sout << "Lp.,x1,x2,x1*,x2*,y*,f_calls,,x1*,x2*,y*,f_calls" << endl;
+	
+	double s = 0.12;
+		matrix k0 = rand_mat(2);
 
-	for(int step = 0; step < 3; step++)
-	{
-		double s = step_sizes[step];
-
-		for (int i = 0; i < n; i++)
+		for (int j = 0; j < 2; ++j)
 		{
-			matrix x0 = rand_mat(2);
-
-			for (int j = 0; j < 2; ++j)
-				x0(j) = -1.0 + 2.0 * x0(j);
-			
-			matrix s0(2, 1);
-			s0(0) = s;
-			s0(1) = s;
-
-			// cout << (i + 1) << ",";
-			Sout << (i + 1) << "," << x0(0) << "," << x0(1);
-
-			// METODA HOOKE'A JEEVESA
-			solution::clear_calls();
-			optHJ = HJ(ff2T, x0, s, alphaHJ, epsilon, Nmax);
-
-			// cout << x0(0) << "," << x0(1) << "," << opt.x(0) << "," << opt.x(1) << "," << opt.y(0) << "," << opt.f_calls << endl;
-			Sout << "," << optHJ.x(0) << "," << optHJ.x(1) << "," << optHJ.y(0) << "," << optHJ.f_calls;
-			
-			// METODA ROSENBROCKA
-			solution::clear_calls();
-			optRos = Rosen(ff2T, x0, s0, alphaRos, beta, epsilon, Nmax);
-			Sout << ",," << optRos.x(0) << "," << optRos.x(1) << "," << optRos.y(0) << "," << optRos.f_calls << endl;
+			k0(j) = 20.0 * k0(j);
 		}
-	}
+			
+		k0(0) = 3.00612;
+		k0(1) = 10.8401;
 
+		matrix s0(2, 1);
+		s0(0) = s;
+		s0(1) = s;
+
+		// cout << (i + 1) << ",";
+		//Sout << (i + 1) << "," << x0(0) << "," << x0(1);
+
+		// METODA HOOKE'A JEEVESA
+		cout << "HJ method:\n";
+		solution::clear_calls();
+		optHJ = HJ(ff2R, k0, s, alphaHJ, epsilon, Nmax);
+
+		// cout << x0(0) << "," << x0(1) << "," << opt.x(0) << "," << opt.x(1) << "," << opt.y(0) << "," << opt.f_calls << endl;
+		//cout << optHJ.x(0) << "," << optHJ.x(1) << "," << optHJ.y(0) << "," << optHJ.f_calls;
+
+		// METODA ROSENBROCKA
+		cout << "Rosenbrock method:\n";
+		solution::clear_calls();
+		optRos = Rosen(ff2R, k0, s0, alphaRos, beta, epsilon, Nmax);
+		//cout << "," << optRos.x(0) << "," << optRos.x(1) << "," << optRos.y(0) << "," << optRos.f_calls << endl;
+	
 	Sout.close();
 
 
 	// PROBLEM RZECZYWISTY - TEST
-	matrix k(2, 1);
+	/*matrix k(2, 1);
 	k(0) = 5.0;
 	k(1) = 5.0;
 
 	matrix Q = ff2R(k);
 
-	cout << "Q(k1,k2) = " << Q(0) << " (powinna wynosic: okolo 775.229)\n";
+	cout << "Q(k1,k2) = " << Q(0) << " (powinna wynosic: okolo 775.229)\n";*/
+
+	//HJ
+	/*matrix k0(2, 1);
+	k0(0) = 3.00612;
+	k0(1) = 10.8401;
+
+	ff2R(k0);*/
+
+	//Rosen
+	matrix k0(2, 1);
+	k0(0) = 3.00586;
+	k0(1) = 10.8388;
+
+	ff2R(k0);
+
 }
 
 void lab3()

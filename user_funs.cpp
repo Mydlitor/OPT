@@ -179,6 +179,8 @@ matrix ff2R(matrix x, matrix ud1, matrix ud2)
 
         double M = k1 * (alpha_ref - alpha) + k2 * (omega_ref - omega);
 
+		cout << Y[0](i, 0) << "," << alpha << "," << omega << endl;
+
         Q += (10.0 * pow(alpha_ref - alpha, 2) + pow(omega_ref - omega, 2) + pow(M, 2)) * dt;
     }
     
