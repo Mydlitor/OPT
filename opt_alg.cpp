@@ -554,7 +554,44 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
+		matrix p0 = x0;
+		
+		//hardcoded, przyjmujemy n = 2
+		matrix p1 = p0 + s * ident_mat(2)(1);
+		matrix p2 = p0 + s * ident_mat(2)(2);
+
+		matrix p_min, p_max, p_e;
+
+		double f_p0, f_p1, f_p2, f_p_odb, f_p_ciez, f_p_e;
+
+		while (true) {
+			f_p0 = m2d(Xopt.fit_fun(ff, p0));
+			f_p1 = m2d(Xopt.fit_fun(ff, p1));
+			f_p2 = m2d(Xopt.fit_fun(ff, p2));
+
+			vector<pair<double, matrix>> p;
+			p.push_back({ f_p0, p0 });
+			p.push_back({ f_p1, p1 });
+			p.push_back({ f_p2, p2 });
+			sort(p.begin(), p.end());
+			
+			matrix p_ciez = (p[0].second + p[1].second) / 2;
+
+			matrix p_odb = p_ciez + alpha * (p_ciez - p[2].second);
+
+			f_p_odb = m2d(Xopt.fit_fun(ff, p_odb));
+
+			if (f_p_odb < p[0].first) {
+				p_e = p_ciez + gamma * (p_odb - p_ciez);
+				f_p_e = m2d(Xopt.fit_fun(ff, p_e));
+				if (f_p_e < f_p_odb)
+					p[2] = { f_p_e, p_e };
+				else
+					p[2] = { f_p_odb, p_odb };
+			}
+			//linia 17 else do napisania
+		}
+
 
 		return Xopt;
 	}
