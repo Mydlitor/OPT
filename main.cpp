@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
 	try
 	{
-		lab2();
+		lab3();
 	}
 	catch (string EX_INFO)
 	{
@@ -236,7 +236,27 @@ void lab2()
 
 void lab3()
 {
+	double alpha = 1;
+	double beta = 0.5;
+	double gamma = 2;
+	double delta = 0.5;
+	double epsilon = 1e-3;
+	int Nmax = 10000;
 
+	int n = 100;
+
+	solution optX;
+
+	double s = 0.01;
+	matrix k0 = rand_mat(2);
+
+	for (int j = 0; j < 2; ++j)
+	{
+		k0(j) = 20 * k0(j) + 4;
+	}
+	std::cout << k0(0) << " y: " << k0(1);
+	optX = sym_NM(ff3T, k0, s, alpha, beta, gamma, delta, epsilon, Nmax);
+	std::cout << "X0: " << k0 << " optimized: " << optX.y;
 }
 
 void lab4()

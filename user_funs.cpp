@@ -188,3 +188,12 @@ matrix ff2R(matrix x, matrix ud1, matrix ud2)
 
     return y;
 }
+
+matrix ff3T(matrix x, matrix ud1, matrix ud2) {
+    double x1 = m2d(x(0));
+    double x2 = m2d(x(1));
+    double common = M_PI * sqrt(pow(x1/M_PI, 2) + pow(x2/M_PI, 2));
+    double t1 = sin(common);
+
+    return matrix(t1 / common);
+}
