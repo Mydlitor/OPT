@@ -566,7 +566,6 @@ solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc
 			params(1) = c;
 			
 			// Wyznacz minimum F(x) = f(x) + c*S(x) metodą Nelder-Mead
-			solution::clear_calls();
 			Xopt = sym_NM(ff, x_curr, s, alpha, beta, gamma, delta, eps_NM, Nmax, params, ud2);
 			
 			x_curr = Xopt.x;
