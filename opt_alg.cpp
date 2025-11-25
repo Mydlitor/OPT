@@ -539,8 +539,63 @@ solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc
 {
 	try {
 		solution Xopt;
-		//Tu wpisz kod funkcji
-
+		
+		// Parametry dla sym_NM
+		double alpha = 1.0;
+		double beta = 0.5;
+		double gamma = 2.0;
+		double delta = 0.5;
+		double s = 0.5;
+		double eps_NM = 1e-3;
+		
+		matrix x_prev = x0;
+		matrix x_curr = x0;
+		
+		// ud1 zawiera parametry: ud1(0) = a (parametr ograniczenia)
+		// Tworzymy wektor parametrów z a i c
+		matrix params(2, 1);
+		params(0) = ud1(0);  // a (parametr ograniczenia)
+		params(1) = c;       // współczynnik kary
+		
+		int iter = 0;
+		
+		do {
+			x_prev = x_curr;
+			
+			// Aktualizuj współczynnik kary w parametrach
+			params(1) = c;
+			
+			// Wyznacz minimum F(x) = f(x) + c*S(x) metodą Nelder-Mead
+			solution::clear_calls();
+			Xopt = sym_NM(ff, x_curr, s, alpha, beta, gamma, delta, eps_NM, Nmax, params, ud2);
+			
+			x_curr = Xopt.x;
+			
+			// Aktualizuj współczynnik kary
+			c = dc * c;
+			
+			iter++;
+			
+			if (solution::f_calls > Nmax) {
+				Xopt.flag = 0;
+				return Xopt;
+			}
+			
+			// Sprawdź warunek zbieżności: ||x_curr - x_prev|| < epsilon
+			double dist = 0.0;
+			int len = get_len(x_curr);
+			for (int i = 0; i < len; ++i) {
+				dist += pow(x_curr(i) - x_prev(i), 2);
+			}
+			dist = sqrt(dist);
+			
+			if (dist < epsilon) {
+				break;
+			}
+			
+		} while (true);
+		
+		Xopt.flag = 1;
 		return Xopt;
 	}
 	catch (string ex_info)
@@ -549,24 +604,16 @@ solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc
 	}
 }
 
-bool odleglosc_wieksza_od_epsilon(matrix p1, matrix p2, matrix p3, matrix p_min, double epsilon) {
-	
-	matrix origin;
-	if ((p1[0] == p_min[0]) && (p1[1] == p_min[1])) { //p1 == p_min
-		origin = p1;
-		p1 = p2;
-		p2 = p3;
-	} else if ((p2[0] == p_min[0]) && (p2[1] == p_min[1])){ //p2 == p_min
-		origin = p2;
-		p2 = p3;
-	} else if ((p3[0] == p_min[0]) && (p3[1] == p_min[1])) { //p3 == p_min
-		origin = p3;
+bool odleglosc_wieksza_od_epsilon(matrix* p, int n, int min_idx, double epsilon) {
+	for (int i = 0; i <= n; i++) {
+		if (i == min_idx) continue;
+		double dist = 0.0;
+		for (int j = 0; j < n; j++) {
+			dist += pow(p[min_idx](j) - p[i](j), 2);
+		}
+		if (sqrt(dist) >= epsilon) return true;
 	}
-
-	double odl1 = sqrt(m2d(p1*p1 + p2*p2));
-	double odl2 = sqrt(m2d(p1*p1 + p2*p2));
-
-	return (odl1 > epsilon) && (odl2 > epsilon);
+	return false;
 }
 
 solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double alpha, double beta, double gamma, double delta, double epsilon, int Nmax, matrix ud1, matrix ud2)
@@ -574,95 +621,119 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 	try
 	{
 		solution Xopt;
-		matrix p[3] = {matrix(2,1), matrix(2,1), matrix(2,1)};
-		p[0] = x0;
+		int n = get_len(x0);  // wymiar problemu
 		
-		for (int i = 0; i < 2; i++) {
-			p[i] = x0 + s * ident_mat(2)[i];
+		// Tworzenie sympleksu początkowego (n+1 wierzchołków)
+		matrix* p = new matrix[n + 1];
+		p[0] = x0;
+		for (int i = 1; i <= n; i++) {
+			p[i] = x0 + s * ident_mat(n)[i-1];
 		}
-
-		matrix p_min;
-
-		do { //TODO condition
-			double f_p0, f_p1, f_p2;
-
-			Xopt.x = p[0]; Xopt.fit_fun(ff, ud1, ud2); f_p0 = m2d(Xopt.y);
-			Xopt.x = p[1]; Xopt.fit_fun(ff, ud1, ud2); f_p1 = m2d(Xopt.y);
-			Xopt.x = p[2]; Xopt.fit_fun(ff, ud1, ud2); f_p2 = m2d(Xopt.y);
-			
-			matrix p_max = p[2];
-			
-			if (f_p1 > f_p2) { //MAX
-				p_max = p[1];
-			}
-			if (f_p0 > f_p1) {
-				p_max = p[0];
+		
+		double* f = new double[n + 1];  // wartości funkcji celu w wierzchołkach
+		
+		do {
+			// Oblicz wartości funkcji w wierzchołkach sympleksu
+			for (int i = 0; i <= n; i++) {
+				Xopt.x = p[i]; 
+				Xopt.fit_fun(ff, ud1, ud2); 
+				f[i] = m2d(Xopt.y);
 			}
 			
-			matrix p_min = p[0];
-			
-			if ((f_p1 < f_p0) && (p[1][0][0] != p_max[0]) && (p[1][0][1] != p_max[1])) { //MIX  p[1] != p_max //FIXME!!!
-				p_min = p[1];
-			}
-			if ((f_p2 < f_p1) && (p[2][0] != p_max[0]) && (p[2][1] != p_max[1])) { //p[2] != p_max
-				p_min = p[2];
+			// Znajdź p_min i p_max
+			int min_idx = 0, max_idx = 0;
+			for (int i = 1; i <= n; i++) {
+				if (f[i] < f[min_idx]) min_idx = i;
+				if (f[i] > f[max_idx]) max_idx = i;
 			}
 			
-			matrix p_(2, 1, 0.0);
-			for (int i = 0; i < 3; i++) {
-				if ((p[i][0] == p_max[0]) && (p[1][1] == p_max[1])) //p[i] == p_max
-					continue;
+			// Oblicz centroid (bez p_max)
+			matrix p_bar(n, 1, 0.0);
+			for (int i = 0; i <= n; i++) {
+				if (i != max_idx) {
+					p_bar = p_bar + p[i];
+				}
+			}
+			p_bar = p_bar / n;
+			
+			// ODBICIE
+			matrix p_odb = p_bar + alpha * (p_bar - p[max_idx]);
+			Xopt.x = p_odb; Xopt.fit_fun(ff, ud1, ud2);
+			double f_odb = m2d(Xopt.y);
+			
+			if (f_odb < f[min_idx]) {
+				// EKSPANSJA
+				matrix p_e = p_bar + gamma * (p_odb - p_bar);
+				Xopt.x = p_e; Xopt.fit_fun(ff, ud1, ud2);
+				double f_e = m2d(Xopt.y);
 				
-				p_ = p_ + p[i];
-			}
-			
-			p_ = p_ / 2;
-
-			matrix p_odb = p_ + alpha * (p_ - p_max);
-			
-			double f_p_odb, f_p_min, f_p_max;
-			
-			Xopt.x = p_odb; Xopt.fit_fun(ff, ud1, ud2); f_p_odb = m2d(Xopt.y);
-			Xopt.x = p_min; Xopt.fit_fun(ff, ud1, ud2); f_p_min = m2d(Xopt.y);
-			Xopt.x = p_max; Xopt.fit_fun(ff, ud1, ud2); f_p_max = m2d(Xopt.y);
-			
-			if (f_p_odb < f_p_min) {
-				matrix p_eksansja = p_ + gamma * (p_odb - p_); //Punkt po ekspansji
-				double f_p_ekspansja;
-
-				Xopt.x = p_eksansja; Xopt.fit_fun(ff, ud1, ud2); f_p_ekspansja = m2d(Xopt.y);
-				
-				if (f_p_ekspansja < f_p_odb) {
-					p_max = p_eksansja;
+				if (f_e < f_odb) {
+					p[max_idx] = p_e;
 				} else {
-					p_max = p_odb;
+					p[max_idx] = p_odb;
 				}
 			} else {
-				if ((f_p_min <= f_p_odb) && (f_p_odb < f_p_max)) {
-					p_max = p_odb;
+				if (f[min_idx] <= f_odb && f_odb < f[max_idx]) {
+					p[max_idx] = p_odb;
 				} else {
-					matrix p_zwezanie = p_ + beta * (p_max - p_);
-					double f_p_zwezanie;
+					// ZAWĘŻENIE
+					matrix p_z = p_bar + beta * (p[max_idx] - p_bar);
+					Xopt.x = p_z; Xopt.fit_fun(ff, ud1, ud2);
+					double f_z = m2d(Xopt.y);
 					
-					Xopt.x = p_zwezanie; Xopt.fit_fun(ff, ud1, ud2); f_p_zwezanie = m2d(Xopt.y);
-					
-					if (f_p_zwezanie >= f_p_max) {
-						for (int i = 0; i < 2; i++) {
-							if ((p[i][0] == p_min[0]) && (p[i][1] == p_min[1])) //p[i] == p_min
-								continue;
-							
-							p[i] = gamma * (p[i] + p_min);
+					if (f_z >= f[max_idx]) {
+						// REDUKCJA
+						for (int i = 0; i <= n; i++) {
+							if (i != min_idx) {
+								p[i] = delta * (p[i] + p[min_idx]);
+							}
 						}
 					} else {
-						p_max = p_zwezanie;
+						p[max_idx] = p_z;
 					}
-				} 
+				}
 			}
+			
 			if (solution::f_calls > Nmax) {
-				throw string("Przekroczono maksymalna liczbe wywolan funkcji celu");
+				Xopt.flag = 0;
+				break;
 			}
-		} while (odleglosc_wieksza_od_epsilon(p[0], p[1], p[2], p_min, epsilon));
-
+			
+			// Znajdź nowy min_idx po modyfikacjach
+			for (int i = 0; i <= n; i++) {
+				Xopt.x = p[i]; 
+				Xopt.fit_fun(ff, ud1, ud2); 
+				f[i] = m2d(Xopt.y);
+			}
+			min_idx = 0;
+			for (int i = 1; i <= n; i++) {
+				if (f[i] < f[min_idx]) min_idx = i;
+			}
+			
+			// Warunek stopu: max||p_min - p_i|| < epsilon
+			if (!odleglosc_wieksza_od_epsilon(p, n, min_idx, epsilon)) {
+				break;
+			}
+			
+		} while (true);
+		
+		// Znajdź najlepszy punkt
+		int best_idx = 0;
+		for (int i = 1; i <= n; i++) {
+			Xopt.x = p[i]; Xopt.fit_fun(ff, ud1, ud2);
+			double fi = m2d(Xopt.y);
+			Xopt.x = p[best_idx]; Xopt.fit_fun(ff, ud1, ud2);
+			double fb = m2d(Xopt.y);
+			if (fi < fb) best_idx = i;
+		}
+		
+		Xopt.x = p[best_idx];
+		Xopt.fit_fun(ff, ud1, ud2);
+		Xopt.flag = 1;
+		
+		delete[] p;
+		delete[] f;
+		
 		return Xopt;
 	}
 	catch (string ex_info)

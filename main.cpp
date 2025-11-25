@@ -236,27 +236,124 @@ void lab2()
 
 void lab3()
 {
-	double alpha = 1;
+	// Parametry algorytmu Nelder-Mead
+	double alpha = 1.0;
 	double beta = 0.5;
-	double gamma = 2;
+	double gamma = 2.0;
 	double delta = 0.5;
 	double epsilon = 1e-3;
 	int Nmax = 10000;
+	double s = 0.5;
 
-	int n = 100;
+	// Liczba optymalizacji
+	int n = 100;  // Zgodnie z konspektem: 100 optymalizacji
+
+	// Wartości parametru a
+	double a_values[3] = {4.0, 4.4934, 5.0};
 
 	solution optX;
 
-	double s = 0.01;
-	matrix k0 = rand_mat(2);
+	cout.precision(6);
 
-	for (int j = 0; j < 2; ++j)
-	{
-		k0(j) = 20 * k0(j) + 4;
+	// ========== TESTOWA FUNKCJA CELU - ZEWNĘTRZNA FUNKCJA KARY ==========
+	cout << "=== ZEWNETRZNA FUNKCJA KARY ===" << endl;
+	
+	for (int a_idx = 0; a_idx < 3; ++a_idx) {
+		double a = a_values[a_idx];
+		cout << "\na = " << a << endl;
+		cout << "Lp,x1,x2,x1*,x2*,y*,r*,f_calls" << endl;
+		
+		for (int i = 0; i < n; ++i) {
+			// Losowanie punktu początkowego w obszarze dopuszczalnym
+			matrix x0(2, 1);
+			do {
+				x0 = rand_mat(2);
+				x0(0) = x0(0) * (a - 1.0) + 1.0;  // x1 in [1, a]
+				x0(1) = x0(1) * (a - 1.0) + 1.0;  // x2 in [1, a]
+			} while (sqrt(x0(0)*x0(0) + x0(1)*x0(1)) > a);  // Sprawdź ograniczenie g3
+			
+			// Parametry dla funkcji kary: a i c
+			matrix params(2, 1);
+			params(0) = a;
+			params(1) = 1.0;  // początkowy współczynnik kary
+			
+			solution::clear_calls();
+			
+			// Zewnętrzna funkcja kary: c rośnie (dc > 1)
+			optX = pen(ff3T_zewn, x0, 1.0, 2.0, epsilon, Nmax, params, NAN);
+			
+			// Oblicz wartość funkcji celu bez kary
+			optX.fit_fun(ff3T);
+			
+			// Oblicz r = sqrt(x1^2 + x2^2)
+			double r = sqrt(optX.x(0)*optX.x(0) + optX.x(1)*optX.x(1));
+			
+			cout << fixed << (i+1) << "," << x0(0) << "," << x0(1) << ","
+			     << optX.x(0) << "," << optX.x(1) << "," << optX.y(0) << ","
+			     << r << "," << solution::f_calls << endl;
+		}
 	}
-	std::cout << k0(0) << " y: " << k0(1);
-	optX = sym_NM(ff3T, k0, s, alpha, beta, gamma, delta, epsilon, Nmax);
-	std::cout << "X0: " << k0 << " optimized: " << optX.y;
+
+	// ========== TESTOWA FUNKCJA CELU - WEWNĘTRZNA FUNKCJA KARY ==========
+	cout << "\n=== WEWNETRZNA FUNKCJA KARY ===" << endl;
+	
+	for (int a_idx = 0; a_idx < 3; ++a_idx) {
+		double a = a_values[a_idx];
+		cout << "\na = " << a << endl;
+		cout << "Lp,x1,x2,x1*,x2*,y*,r*,f_calls" << endl;
+		
+		for (int i = 0; i < n; ++i) {
+			// Losowanie punktu początkowego WEWNĄTRZ obszaru dopuszczalnego
+			matrix x0(2, 1);
+			do {
+				x0 = rand_mat(2);
+				// Punkt musi być wewnątrz: x1 > 1, x2 > 1, sqrt(x1^2+x2^2) < a
+				x0(0) = x0(0) * (a - 1.0 - 0.1) + 1.0 + 0.05;  // x1 in (1, a-0.05)
+				x0(1) = x0(1) * (a - 1.0 - 0.1) + 1.0 + 0.05;  // x2 in (1, a-0.05)
+			} while (sqrt(x0(0)*x0(0) + x0(1)*x0(1)) >= a - 0.01);  // Wewnątrz koła
+			
+			// Parametry dla funkcji kary: a i c
+			matrix params(2, 1);
+			params(0) = a;
+			params(1) = 10.0;  // początkowy współczynnik kary (duży dla wewnętrznej)
+			
+			solution::clear_calls();
+			
+			// Wewnętrzna funkcja kary: c maleje (dc < 1)
+			optX = pen(ff3T_wewn, x0, 10.0, 0.5, epsilon, Nmax, params, NAN);
+			
+			// Oblicz wartość funkcji celu bez kary
+			optX.fit_fun(ff3T);
+			
+			// Oblicz r = sqrt(x1^2 + x2^2)
+			double r = sqrt(optX.x(0)*optX.x(0) + optX.x(1)*optX.x(1));
+			
+			cout << fixed << (i+1) << "," << x0(0) << "," << x0(1) << ","
+			     << optX.x(0) << "," << optX.x(1) << "," << optX.y(0) << ","
+			     << r << "," << solution::f_calls << endl;
+		}
+	}
+
+	// ========== PROBLEM RZECZYWISTY ==========
+	cout << "\n=== PROBLEM RZECZYWISTY ===" << endl;
+	cout << "v0x,omega,x_end,f_calls" << endl;
+	
+	// Punkt początkowy dla problemu rzeczywistego
+	matrix x0_R(2, 1);
+	x0_R(0) = 0.0;   // v0x początkowe
+	x0_R(1) = 0.0;   // omega początkowe
+	
+	// Parametry dla funkcji kary
+	matrix params_R(2, 1);
+	params_R(0) = 1.0;  // początkowy współczynnik kary (dummy dla zgodności z pen)
+	params_R(1) = 1.0;
+	
+	solution::clear_calls();
+	
+	// Zewnętrzna funkcja kary
+	optX = pen(ff3R, x0_R, 1.0, 2.0, epsilon, Nmax, params_R, NAN);
+	
+	cout << fixed << optX.x(0) << "," << optX.x(1) << "," << -optX.y(0) << "," << solution::f_calls << endl;
 }
 
 void lab4()
