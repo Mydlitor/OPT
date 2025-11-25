@@ -553,6 +553,7 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 {
 	try
 	{
+		const int n = 2;
 		solution Xopt;
 		matrix p0 = x0;
 		
@@ -560,11 +561,11 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 		matrix p1 = p0 + s * ident_mat(2)(1);
 		matrix p2 = p0 + s * ident_mat(2)(2);
 
-		matrix p_min, p_max, p_e;
+		matrix p_min, p_max, p_e, p_z;
 
-		double f_p0, f_p1, f_p2, f_p_odb, f_p_ciez, f_p_e;
+		double f_p0, f_p1, f_p2, f_p_odb, f_p_ciez, f_p_e, f_p_z;
 
-		while (true) {
+		do {
 			f_p0 = m2d(Xopt.fit_fun(ff, p0));
 			f_p1 = m2d(Xopt.fit_fun(ff, p1));
 			f_p2 = m2d(Xopt.fit_fun(ff, p2));
@@ -589,8 +590,28 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 				else
 					p[2] = { f_p_odb, p_odb };
 			}
-			//linia 17 else do napisania
-		}
+			else {
+				if (p[0].first <= f_p_odb && f_p_odb < p[2].first)
+					p[2] = { f_p_odb, p_odb };
+				else {
+					p_z = p_ciez + beta * (p[2].second - p_ciez);
+					f_p_z = m2d(Xopt.fit_fun(ff, p_z));
+					if (f_p_z >= p[2].first) {
+						for (int i = 1; i <= n; i++) {
+							p[i].second = delta * (p[i].second + p[0].second);
+						}
+					}
+					else
+						p[2].second = p_z;
+				}
+			}
+
+			if (solution::f_calls >= Nmax)
+			{
+				throw string("Przekroczono maksymalna liczbe wywolan funkcji celu");
+			}
+
+		} while (true); //dodac warunek skonczenia pętli (linia 36 pseudokod)
 
 
 		return Xopt;
