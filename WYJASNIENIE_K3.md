@@ -183,11 +183,14 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s,
 {
     solution Xopt;
     matrix p[3] = {matrix(2,1), matrix(2,1), matrix(2,1)};
-    p[0] = x0;
+    p[0] = x0;  // Pierwszy wierzchołek = punkt startowy
     
-    // Tworzenie sympleksu początkowego
+    // Tworzenie sympleksu początkowego (n+1 wierzchołków dla n wymiarów)
+    // p[0] = x0 (już ustawione)
+    // p[1] = x0 + s*e1 (e1 = [1,0]ᵀ)
+    // p[2] = x0 + s*e2 (e2 = [0,1]ᵀ)
     for (int i = 0; i < 2; i++) {
-        p[i] = x0 + s * ident_mat(2)[i];
+        p[i+1] = x0 + s * ident_mat(2)[i];  // UWAGA: p[i+1], nie p[i]!
     }
     
     // ... (główna pętla algorytmu)
