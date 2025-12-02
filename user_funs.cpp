@@ -198,110 +198,81 @@ matrix ff3T(matrix x, matrix ud1, matrix ud2) {
     return matrix(t1 / common);
 }
 
-// Zewnętrzna funkcja kary dla problemu testowego K3
-// ud1(0) = a (parametr ograniczenia)
-// ud1(1) = c (współczynnik kary)
 matrix ff3T_zewn(matrix x, matrix ud1, matrix ud2) {
     double x1 = m2d(x(0));
     double x2 = m2d(x(1));
     double a = m2d(ud1(0));
     double c = m2d(ud1(1));
 
-    // Ograniczenia:
-    // g1 = -x1 + 1 <= 0  (x1 >= 1)
-    // g2 = -x2 + 1 <= 0  (x2 >= 1)
-    // g3 = sqrt(x1^2 + x2^2) - a <= 0
     double g1 = -x1 + 1.0;
     double g2 = -x2 + 1.0;
     double g3 = sqrt(x1*x1 + x2*x2) - a;
 
-    // Funkcja kary zewnętrznej: S = sum(max(0, gi)^2)
     double S = pow(fmax(0.0, g1), 2) + pow(fmax(0.0, g2), 2) + pow(fmax(0.0, g3), 2);
 
-    // Funkcja celu (ff3T)
     double common = M_PI * sqrt(pow(x1/M_PI, 2) + pow(x2/M_PI, 2));
     double f = sin(common) / common;
 
     return matrix(f + c * S);
 }
 
-// Wewnętrzna funkcja kary dla problemu testowego K3
-// ud1(0) = a (parametr ograniczenia)
-// ud1(1) = c (współczynnik kary)
 matrix ff3T_wewn(matrix x, matrix ud1, matrix ud2) {
     double x1 = m2d(x(0));
     double x2 = m2d(x(1));
     double a = m2d(ud1(0));
     double c = m2d(ud1(1));
 
-    // Ograniczenia (muszą być < 0 dla punktu wewnątrz):
     double g1 = -x1 + 1.0;
     double g2 = -x2 + 1.0;
     double g3 = sqrt(x1*x1 + x2*x2) - a;
 
-    // Sprawdzenie czy punkt jest wewnątrz obszaru dopuszczalnego
     if (g1 >= 0 || g2 >= 0 || g3 >= 0) {
-        return matrix(1e10);  // Bardzo duża wartość dla punktu poza obszarem
+        return matrix(1e10);  
     }
 
-    // Funkcja kary wewnętrznej: S = -sum(1/gi)
     double S = -1.0/g1 - 1.0/g2 - 1.0/g3;
 
-    // Funkcja celu (ff3T)
     double common = M_PI * sqrt(pow(x1/M_PI, 2) + pow(x2/M_PI, 2));
     double f = sin(common) / common;
 
     return matrix(f + c * S);
 }
 
-// Równania ruchu piłki dla problemu rzeczywistego K3
-// Y = [x, y, vx, vy]
-// ud1 = [v0x, omega]
 matrix df3(double t, matrix Y, matrix ud1, matrix ud2) {
     matrix dY(4, 1);
     
-    double m = 0.6;       // masa piłki [kg]
-    double r = 0.12;      // promień piłki [m]
-    double g = 9.81;      // przyspieszenie grawitacyjne [m/s^2]
-    double C = 0.47;      // współczynnik oporu
-    double rho = 1.2;     // gęstość powietrza [kg/m^3]
-    double S = M_PI * r * r;  // pole przekroju
+    double m = 0.6;     
+    double r = 0.12;    
+    double g = 9.81;    
+    double C = 0.47;    
+    double rho = 1.2;   
+    double S = M_PI * r * r; 
     
-    double omega = m2d(ud1(1));  // rotacja [rad/s]
+    double omega = m2d(ud1(1));  
     
     double vx = Y(2);
     double vy = Y(3);
     
-    // Siła oporu powietrza
     double Dx = 0.5 * C * rho * S * vx * fabs(vx);
     double Dy = 0.5 * C * rho * S * vy * fabs(vy);
     
-    // Siła Magnusa
     double FMx = rho * vy * omega * M_PI * pow(r, 3);
     double FMy = rho * vx * omega * M_PI * pow(r, 3);
     
-    // Równania ruchu
-    dY(0) = vx;                                    // dx/dt = vx
-    dY(1) = vy;                                    // dy/dt = vy
-    dY(2) = (-Dx - FMx) / m;                       // dvx/dt
-    dY(3) = (-Dy - FMy - m * g) / m;               // dvy/dt = (-Dy - FMy)/m - g
+    dY(0) = vx;                             
+    dY(1) = vy;                             
+    dY(2) = (-Dx - FMx) / m;                
+    dY(3) = (-Dy - FMy - m * g) / m;        
     
     return dY;
 }
 
-// Funkcja celu dla problemu rzeczywistego K3 (spadająca piłka)
-// x = [v0x, omega]
-// ud1(1) = c (współczynnik kary) - zgodnie z konwencją pen()
 matrix ff3R(matrix x, matrix ud1, matrix ud2) {
     double v0x = m2d(x(0));
     double omega = m2d(x(1));
-    double c = m2d(ud1(1));  // współczynnik kary jest w ud1(1)
+    double c = m2d(ud1(1)); 
     
-    // Ograniczenia na zmienne: v0x in [-10, 10], omega in [-10, 10]
-    // g_v0x_min = -10 - v0x <= 0  (v0x >= -10)
-    // g_v0x_max = v0x - 10 <= 0   (v0x <= 10)
-    // g_omega_min = -10 - omega <= 0  (omega >= -10)
-    // g_omega_max = omega - 10 <= 0   (omega <= 10)
+
     double g_v0x_min = -10.0 - v0x;
     double g_v0x_max = v0x - 10.0;
     double g_omega_min = -10.0 - omega;
@@ -310,23 +281,20 @@ matrix ff3R(matrix x, matrix ud1, matrix ud2) {
     double S_bounds = pow(fmax(0.0, g_v0x_min), 2) + pow(fmax(0.0, g_v0x_max), 2) +
                       pow(fmax(0.0, g_omega_min), 2) + pow(fmax(0.0, g_omega_max), 2);
     
-    // Warunki początkowe: [x0, y0, vx0, vy0]
     matrix Y0(4, 1);
-    Y0(0) = 0.0;      // x0 = 0
-    Y0(1) = 100.0;    // y0 = 100m
-    Y0(2) = v0x;      // vx0 = v0x
-    Y0(3) = 0.0;      // vy0 = 0
+    Y0(0) = 0.0;    
+    Y0(1) = 100.0; 
+    Y0(2) = v0x;   
+    Y0(3) = 0.0;    
     
     matrix params(2, 1);
     params(0) = v0x;
     params(1) = omega;
     
-    // Symulacja: t0=0, dt=0.01, tend=7
     matrix* Y = solve_ode(df3, 0.0, 0.01, 7.0, Y0, params, NAN);
     
     int n = get_len(Y[0]);
     
-    // Szukamy x_end (położenie x gdy y <= 0)
     double x_end = 0.0;
     double x_at_y50 = 0.0;
     bool found_y50 = false;
@@ -335,34 +303,26 @@ matrix ff3R(matrix x, matrix ud1, matrix ud2) {
         double yi = Y[1](i, 1);
         double xi = Y[1](i, 0);
         
-        // Szukamy x gdy y jest blisko 50m
         if (!found_y50 && yi <= 50.0) {
             x_at_y50 = xi;
             found_y50 = true;
         }
         
-        // Szukamy x_end gdy y <= 0
         if (yi <= 0.0) {
             x_end = xi;
             break;
         }
         
-        // Jeśli doszliśmy do końca symulacji
         if (i == n - 1) {
             x_end = xi;
         }
     }
-    
-    // Ograniczenie: dla y=50, x musi być w [3, 7]
-    // g1 = 3 - x_at_y50 <= 0  (x >= 3)
-    // g2 = x_at_y50 - 7 <= 0  (x <= 7)
+
     double g1 = 3.0 - x_at_y50;
     double g2 = x_at_y50 - 7.0;
     
-    // Funkcja kary zewnętrznej (ograniczenie na przejście przez punkt + ograniczenia brzegowe)
     double S = pow(fmax(0.0, g1), 2) + pow(fmax(0.0, g2), 2) + S_bounds;
     
-    // Funkcja celu: maksymalizacja x_end => minimalizacja -x_end
     double f = -x_end + c * S;
     
     Y[0].~matrix();

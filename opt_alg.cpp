@@ -551,26 +551,21 @@ solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc
 		matrix x_prev = x0;
 		matrix x_curr = x0;
 		
-		// ud1 zawiera parametry: ud1(0) = a (parametr ograniczenia)
-		// Tworzymy wektor parametrów z a i c
 		matrix params(2, 1);
-		params(0) = ud1(0);  // a (parametr ograniczenia)
-		params(1) = c;       // współczynnik kary
+		params(0) = ud1(0); 
+		params(1) = c;       
 		
 		int iter = 0;
 		
 		do {
 			x_prev = x_curr;
 			
-			// Aktualizuj współczynnik kary w parametrach
 			params(1) = c;
 			
-			// Wyznacz minimum F(x) = f(x) + c*S(x) metodą Nelder-Mead
 			Xopt = sym_NM(ff, x_curr, s, alpha, beta, gamma, delta, eps_NM, Nmax, params, ud2);
 			
 			x_curr = Xopt.x;
 			
-			// Aktualizuj współczynnik kary
 			c = dc * c;
 			
 			iter++;
@@ -580,7 +575,6 @@ solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc
 				return Xopt;
 			}
 			
-			// Sprawdź warunek zbieżności: ||x_curr - x_prev|| < epsilon
 			double dist = 0.0;
 			int len = get_len(x_curr);
 			for (int i = 0; i < len; ++i) {
@@ -620,33 +614,29 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 	try
 	{
 		solution Xopt;
-		int n = get_len(x0);  // wymiar problemu
+		int n = get_len(x0);
 		
-		// Tworzenie sympleksu początkowego (n+1 wierzchołków)
 		matrix* p = new matrix[n + 1];
 		p[0] = x0;
 		for (int i = 1; i <= n; i++) {
 			p[i] = x0 + s * ident_mat(n)[i-1];
 		}
 		
-		double* f = new double[n + 1];  // wartości funkcji celu w wierzchołkach
+		double* f = new double[n + 1]; 
 		
 		do {
-			// Oblicz wartości funkcji w wierzchołkach sympleksu
 			for (int i = 0; i <= n; i++) {
 				Xopt.x = p[i]; 
 				Xopt.fit_fun(ff, ud1, ud2); 
 				f[i] = m2d(Xopt.y);
 			}
 			
-			// Znajdź p_min i p_max
 			int min_idx = 0, max_idx = 0;
 			for (int i = 1; i <= n; i++) {
 				if (f[i] < f[min_idx]) min_idx = i;
 				if (f[i] > f[max_idx]) max_idx = i;
 			}
 			
-			// Oblicz centroid (bez p_max)
 			matrix p_bar(n, 1, 0.0);
 			for (int i = 0; i <= n; i++) {
 				if (i != max_idx) {
@@ -655,13 +645,11 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 			}
 			p_bar = p_bar / n;
 			
-			// ODBICIE
 			matrix p_odb = p_bar + alpha * (p_bar - p[max_idx]);
 			Xopt.x = p_odb; Xopt.fit_fun(ff, ud1, ud2);
 			double f_odb = m2d(Xopt.y);
 			
 			if (f_odb < f[min_idx]) {
-				// EKSPANSJA
 				matrix p_e = p_bar + gamma * (p_odb - p_bar);
 				Xopt.x = p_e; Xopt.fit_fun(ff, ud1, ud2);
 				double f_e = m2d(Xopt.y);
@@ -675,13 +663,11 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 				if (f[min_idx] <= f_odb && f_odb < f[max_idx]) {
 					p[max_idx] = p_odb;
 				} else {
-					// ZAWĘŻENIE
 					matrix p_z = p_bar + beta * (p[max_idx] - p_bar);
 					Xopt.x = p_z; Xopt.fit_fun(ff, ud1, ud2);
 					double f_z = m2d(Xopt.y);
 					
 					if (f_z >= f[max_idx]) {
-						// REDUKCJA
 						for (int i = 0; i <= n; i++) {
 							if (i != min_idx) {
 								p[i] = delta * (p[i] + p[min_idx]);
@@ -698,7 +684,6 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 				break;
 			}
 			
-			// Znajdź nowy min_idx po modyfikacjach
 			for (int i = 0; i <= n; i++) {
 				Xopt.x = p[i]; 
 				Xopt.fit_fun(ff, ud1, ud2); 
@@ -709,14 +694,12 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 				if (f[i] < f[min_idx]) min_idx = i;
 			}
 			
-			// Warunek stopu: max||p_min - p_i|| < epsilon
 			if (!odleglosc_wieksza_od_epsilon(p, n, min_idx, epsilon)) {
 				break;
 			}
 			
 		} while (true);
 		
-		// Znajdź najlepszy punkt
 		int best_idx = 0;
 		for (int i = 1; i <= n; i++) {
 			Xopt.x = p[i]; Xopt.fit_fun(ff, ud1, ud2);
