@@ -365,3 +365,8 @@ FodyWeavers.xsd
 # Compiled executables
 *.exe
 out
+# Object files
+*.o
+
+# Linux executable
+OPT
