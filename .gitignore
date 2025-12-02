@@ -370,3 +370,6 @@ out
 
 # Linux executable
 OPT
+
+# Linux build output
+opt
