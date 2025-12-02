@@ -341,6 +341,23 @@ void lab3()
 	optX = pen(ff3R, x0_R, 1.0, 2.0, epsilon, Nmax, params_R, NAN);
 
 	cout << fixed << optX.x(0) << "," << optX.x(1) << "," << -optX.y(0) << "," << solution::f_calls << endl;
+
+	matrix Y0_sim(4, 1);
+	Y0_sim(0) = 0.0;   
+	Y0_sim(1) = 100.0; 
+	Y0_sim(2) = optX.x(0);  
+	Y0_sim(3) = 0.0;    
+
+	matrix params_sim(2, 1);
+	params_sim(0) = optX.x(0);  
+	params_sim(1) = optX.x(1);  
+
+	matrix *Y = solve_ode(df3, 0.0, 0.01, 7.0, Y0_sim, params_sim, NAN);  
+	ofstream Sout("symulacja_lab3.csv");
+	Sout << hcat(Y[0], Y[1]);
+	Sout.close();
+	Y[0].~matrix();
+	Y[1].~matrix();
 }
 
 void lab4()
