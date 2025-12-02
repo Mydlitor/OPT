@@ -8,7 +8,7 @@ Akademia G�rniczo-Hutnicza
 Data ostatniej modyfikacji: 30.09.2025
 *********************************************/
 
-#include"opt_alg.h"
+#include "opt_alg.h"
 
 void lab0();
 void lab1(int aN);
@@ -18,7 +18,7 @@ void lab4();
 void lab5();
 void lab6();
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	try
 	{
@@ -27,63 +27,66 @@ int main(int argc, char* argv[])
 	catch (string EX_INFO)
 	{
 		cerr << "ERROR:\n";
-		cerr << EX_INFO << endl << endl;
+		cerr << EX_INFO << endl
+			 << endl;
 	}
 	return 0;
 }
 
 void lab0()
 {
-	//Funkcja testowa
-	double epsilon = 1e-2;									// dok�adno��
-	int Nmax = 10000;										// maksymalna liczba wywo�a� funkcji celu
-	matrix lb(2, 1, -5), ub(2, 1, 5),						// dolne oraz g�rne ograniczenie
-		a(2, 1);											// dok�adne rozwi�zanie optymalne
-	solution opt;											// rozwi�zanie optymalne znalezione przez algorytm
+	// Funkcja testowa
+	double epsilon = 1e-2;			  // dok�adno��
+	int Nmax = 10000;				  // maksymalna liczba wywo�a� funkcji celu
+	matrix lb(2, 1, -5), ub(2, 1, 5), // dolne oraz g�rne ograniczenie
+		a(2, 1);					  // dok�adne rozwi�zanie optymalne
+	solution opt;					  // rozwi�zanie optymalne znalezione przez algorytm
 	a(0) = -1;
 	a(1) = 2;
-	opt = MC(ff0T, 2, lb, ub, epsilon, Nmax, a);			// wywo�anie procedury optymalizacji
-	cout << opt << endl << endl;							// wypisanie wyniku
-	solution::clear_calls();								// wyzerowanie licznik�w
+	opt = MC(ff0T, 2, lb, ub, epsilon, Nmax, a); // wywo�anie procedury optymalizacji
+	cout << opt << endl
+		 << endl;			 // wypisanie wyniku
+	solution::clear_calls(); // wyzerowanie licznik�w
 
-	//Wahadlo
-	Nmax = 1000;											// dok�adno��
-	epsilon = 1e-2;											// maksymalna liczba wywo�a� funkcji celu
-	lb = 0, ub = 5;											// dolne oraz g�rne ograniczenie
-	double teta_opt = 1;									// maksymalne wychylenie wahad�a
-	opt = MC(ff0R, 1, lb, ub, epsilon, Nmax, teta_opt);		// wywo�anie procedury optymalizacji
-	cout << opt << endl << endl;							// wypisanie wyniku
-	solution::clear_calls();								// wyzerowanie licznik�w
+	// Wahadlo
+	Nmax = 1000;										// dok�adno��
+	epsilon = 1e-2;										// maksymalna liczba wywo�a� funkcji celu
+	lb = 0, ub = 5;										// dolne oraz g�rne ograniczenie
+	double teta_opt = 1;								// maksymalne wychylenie wahad�a
+	opt = MC(ff0R, 1, lb, ub, epsilon, Nmax, teta_opt); // wywo�anie procedury optymalizacji
+	cout << opt << endl
+		 << endl;			 // wypisanie wyniku
+	solution::clear_calls(); // wyzerowanie licznik�w
 
-	//Zapis symulacji do pliku csv
-	matrix Y0 = matrix(2, 1),								// Y0 zawiera warunki pocz�tkowe
-		MT = matrix(2, new double[2] { m2d(opt.x), 0.5 });	// MT zawiera moment si�y dzia�aj�cy na wahad�o oraz czas dzia�ania
-	matrix* Y = solve_ode(df0, 0, 0.1, 10, Y0, NAN, MT);	// rozwi�zujemy r�wnanie r�niczkowe
-	ofstream Sout("symulacja_lab0.csv");					// definiujemy strumie� do pliku .csv
-	Sout << hcat(Y[0], Y[1]);								// zapisyjemy wyniki w pliku
-	Sout.close();											// zamykamy strumie�
-	Y[0].~matrix();											// usuwamy z pami�ci rozwi�zanie RR
+	// Zapis symulacji do pliku csv
+	matrix Y0 = matrix(2, 1),							 // Y0 zawiera warunki pocz�tkowe
+		MT = matrix(2, new double[2]{m2d(opt.x), 0.5});	 // MT zawiera moment si�y dzia�aj�cy na wahad�o oraz czas dzia�ania
+	matrix *Y = solve_ode(df0, 0, 0.1, 10, Y0, NAN, MT); // rozwi�zujemy r�wnanie r�niczkowe
+	ofstream Sout("symulacja_lab0.csv");				 // definiujemy strumie� do pliku .csv
+	Sout << hcat(Y[0], Y[1]);							 // zapisyjemy wyniki w pliku
+	Sout.close();										 // zamykamy strumie�
+	Y[0].~matrix();										 // usuwamy z pami�ci rozwi�zanie RR
 	Y[1].~matrix();
 }
 
 void lab1(int aN)
 {
 #pragma region zadanie
-	//DANE
-	aN = std::clamp(aN, 0, 2); //wybor alpha
+	// DANE
+	aN = std::clamp(aN, 0, 2); // wybor alpha
 	solution opt;
 	int Nmax = 1000;
 	matrix cel = matrix(50.0);
 	int x0 = 0;
 
-	//ekspansja
+	// ekspansja
 	int ld = 0, ud = 100;
-	double alpha[] = { 1.1, 1.5, 2.0 };
+	double alpha[] = {1.1, 1.5, 2.0};
 	double d = 1.5;
-	double* p; //uzywane do obu jako przedzial
+	double *p; // uzywane do obu jako przedzial
 
-	//lagrange
-	double epsilon = 1e-3; //dla fib i lag
+	// lagrange
+	double epsilon = 1e-3; // dla fib i lag
 	double gamma = 1e-6;
 
 	cout.precision(10);
@@ -92,30 +95,32 @@ void lab1(int aN)
 
 	for (int i = 0; i < n; i++)
 	{
-		//LOSOWANIE PUNKTU POCZATKOWEGO
+		// LOSOWANIE PUNKTU POCZATKOWEGO
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<> dis(ld, ud);
 		x0 = dis(gen);
 
-		//EKSPANSJA
+		// EKSPANSJA
 		solution::clear_calls();
 		p = expansion(ff1R, x0, d, alpha[aN], Nmax, cel);
 		cout << "Ekspansja: ";
 		cout << fixed << x0 << "," << p[0] << "," << p[1] << "," << solution::f_calls << ",\n";
 
-		//FIBONACCI
+		// FIBONACCI
 		solution::clear_calls();
 		opt = fib(ff1R, p[0], p[1], epsilon, cel);
 		cout << "Fibonacci: ";
 		cout << fixed << opt.x(0) << "," << opt.y(0) << "," << solution::f_calls << "," << "\n";
 
-		//LAGRANGE 
+		// LAGRANGE
 		solution::clear_calls();
-		try {
+		try
+		{
 			opt = lag(ff1R, ld, ud, epsilon, gamma, Nmax, cel, NAN);
 		}
-		catch (string ex_info) {
+		catch (string ex_info)
+		{
 			cout << "error,error,error,\n";
 			continue;
 		}
@@ -134,7 +139,7 @@ void lab1(int aN)
 	Y0(1) = 1.0;
 	Y0(2) = 20.0;
 
-	matrix* Y = solve_ode(df1, 0.0, 1.0, 2000.0, Y0, matrix(xLag), NAN);
+	matrix *Y = solve_ode(df1, 0.0, 1.0, 2000.0, Y0, matrix(xLag), NAN);
 
 	cout << hcat(Y[0], Y[1]) << endl;
 #pragma endregion
@@ -143,7 +148,7 @@ void lab1(int aN)
 void lab2()
 {
 	/*// matrix xy_start(2, 1, 100.0);
-	
+
 	// double step_size = 1.0;
 	// double alfa = 0.8;
 	// double epsilon = 1e-3;
@@ -153,11 +158,11 @@ void lab2()
 	// solution opt;
 
 	// opt = HJ(ff2T, xy_start, step_size, alfa, epsilon, max_n);
-	
+
 	// std::cout << "X: " << opt.x(0) << " Y: " << opt.x(1) << ", f(x,y): " << opt.y << "\n";
-	
+
 	// TESTOWA FUNKCJA CELU
-	
+
 	double alphaHJ = 0.5;
 	double alphaRos = 2.0;
 	double beta = 0.5;
@@ -173,7 +178,7 @@ void lab2()
 
 	// cout << "Lp.,x1,x2,x1*,x2*,y*,f_calls" << endl;
 	Sout << "Lp.,x1,x2,x1*,x2*,y*,f_calls,,x1*,x2*,y*,f_calls" << endl;
-	
+
 	double s = 0.12;
 		matrix k0 = rand_mat(2);
 
@@ -181,7 +186,7 @@ void lab2()
 		{
 			k0(j) = 20.0 * k0(j);
 		}
-			
+
 		k0(0) = 3.00612;
 		k0(1) = 10.8401;
 
@@ -205,7 +210,7 @@ void lab2()
 		solution::clear_calls();
 		optRos = Rosen(ff2R, k0, s0, alphaRos, beta, epsilon, Nmax);
 		//cout << "," << optRos.x(0) << "," << optRos.x(1) << "," << optRos.y(0) << "," << optRos.f_calls << endl;
-	
+
 	Sout.close();
 
 
@@ -218,20 +223,19 @@ void lab2()
 
 	cout << "Q(k1,k2) = " << Q(0) << " (powinna wynosic: okolo 775.229)\n";*/
 
-	//HJ
+	// HJ
 	/*matrix k0(2, 1);
 	k0(0) = 3.00612;
 	k0(1) = 10.8401;
 
 	ff2R(k0);*/
 
-	//Rosen
+	// Rosen
 	matrix k0(2, 1);
 	k0(0) = 3.00586;
 	k0(1) = 10.8388;
 
 	ff2R(k0);
-
 }
 
 void lab3()
@@ -246,7 +250,7 @@ void lab3()
 	double s = 0.5;
 
 	// Liczba optymalizacji
-	int n = 100;  // Zgodnie z konspektem: 100 optymalizacji
+	int n = 100; // Zgodnie z konspektem: 100 optymalizacji
 
 	// Wartości parametru a
 	double a_values[3] = {4.0, 4.4934, 5.0};
@@ -257,116 +261,119 @@ void lab3()
 
 	// ========== TESTOWA FUNKCJA CELU - ZEWNĘTRZNA FUNKCJA KARY ==========
 	cout << "=== ZEWNETRZNA FUNKCJA KARY ===" << endl;
-	
-	for (int a_idx = 0; a_idx < 3; ++a_idx) {
+
+	for (int a_idx = 0; a_idx < 3; ++a_idx)
+	{
 		double a = a_values[a_idx];
 		cout << "\na = " << a << endl;
 		cout << "Lp,x1,x2,x1*,x2*,y*,r*,f_calls" << endl;
-		
-		for (int i = 0; i < n; ++i) {
+
+		for (int i = 0; i < n; ++i)
+		{
 			// Losowanie punktu początkowego w obszarze dopuszczalnym
 			matrix x0(2, 1);
-			do {
+			do
+			{
 				x0 = rand_mat(2);
-				x0(0) = x0(0) * (a - 1.0) + 1.0;  // x1 in [1, a]
-				x0(1) = x0(1) * (a - 1.0) + 1.0;  // x2 in [1, a]
-			} while (sqrt(x0(0)*x0(0) + x0(1)*x0(1)) > a);  // Sprawdź ograniczenie g3
-			
+				x0(0) = x0(0) * (a - 1.0) + 1.0; // x1 in [1, a]
+				x0(1) = x0(1) * (a - 1.0) + 1.0; // x2 in [1, a]
+			} while (sqrt(x0(0) * x0(0) + x0(1) * x0(1)) > a); // Sprawdź ograniczenie g3
+
 			// Parametry dla funkcji kary: a i c
 			matrix params(2, 1);
 			params(0) = a;
-			params(1) = 1.0;  // początkowy współczynnik kary
-			
+			params(1) = 1.0; // początkowy współczynnik kary
+
 			solution::clear_calls();
-			
+
 			// Zewnętrzna funkcja kary: c rośnie (dc > 1)
 			optX = pen(ff3T_zewn, x0, 1.0, 2.0, epsilon, Nmax, params, NAN);
-			
-			// Oblicz wartość funkcji celu bez kary
-			optX.fit_fun(ff3T);
-			
+
+			// Oblicz wartość funkcji celu BEZ kary
+			matrix y_bez_kary = ff3T(optX.x); 
+
 			// Oblicz r = sqrt(x1^2 + x2^2)
-			double r = sqrt(optX.x(0)*optX.x(0) + optX.x(1)*optX.x(1));
-			
-			cout << fixed << (i+1) << "," << x0(0) << "," << x0(1) << ","
-			     << optX.x(0) << "," << optX.x(1) << "," << optX.y(0) << ","
-			     << r << "," << solution::f_calls << endl;
+			double r = sqrt(optX.x(0) * optX.x(0) + optX.x(1) * optX.x(1));
+
+			cout << fixed << (i + 1) << "," << x0(0) << "," << x0(1) << ","
+				 << optX.x(0) << "," << optX.x(1) << "," << r << ","
+				 << y_bez_kary(0) << "," << solution::f_calls << endl;
 		}
 	}
 
 	// ========== TESTOWA FUNKCJA CELU - WEWNĘTRZNA FUNKCJA KARY ==========
 	cout << "\n=== WEWNETRZNA FUNKCJA KARY ===" << endl;
-	
-	for (int a_idx = 0; a_idx < 3; ++a_idx) {
+
+	for (int a_idx = 0; a_idx < 3; ++a_idx)
+	{
 		double a = a_values[a_idx];
 		cout << "\na = " << a << endl;
 		cout << "Lp,x1,x2,x1*,x2*,y*,r*,f_calls" << endl;
-		
-		for (int i = 0; i < n; ++i) {
+
+		for (int i = 0; i < n; ++i)
+		{
 			// Losowanie punktu początkowego WEWNĄTRZ obszaru dopuszczalnego
 			matrix x0(2, 1);
-			do {
+			do
+			{
 				x0 = rand_mat(2);
 				// Punkt musi być wewnątrz: x1 > 1, x2 > 1, sqrt(x1^2+x2^2) < a
-				x0(0) = x0(0) * (a - 1.0 - 0.1) + 1.0 + 0.05;  // x1 in (1, a-0.05)
-				x0(1) = x0(1) * (a - 1.0 - 0.1) + 1.0 + 0.05;  // x2 in (1, a-0.05)
-			} while (sqrt(x0(0)*x0(0) + x0(1)*x0(1)) >= a - 0.01);  // Wewnątrz koła
-			
+				x0(0) = x0(0) * (a - 1.0 - 0.1) + 1.0 + 0.05; // x1 in (1, a-0.05)
+				x0(1) = x0(1) * (a - 1.0 - 0.1) + 1.0 + 0.05; // x2 in (1, a-0.05)
+			} while (sqrt(x0(0) * x0(0) + x0(1) * x0(1)) >= a - 0.01); // Wewnątrz koła
+
 			// Parametry dla funkcji kary: a i c
 			matrix params(2, 1);
 			params(0) = a;
-			params(1) = 10.0;  // początkowy współczynnik kary (duży dla wewnętrznej)
-			
+			params(1) = 10.0; // początkowy współczynnik kary (duży dla wewnętrznej)
+
 			solution::clear_calls();
-			
+
 			// Wewnętrzna funkcja kary: c maleje (dc < 1)
 			optX = pen(ff3T_wewn, x0, 10.0, 0.5, epsilon, Nmax, params, NAN);
-			
-			// Oblicz wartość funkcji celu bez kary
-			optX.fit_fun(ff3T);
-			
+
+			// Oblicz wartość funkcji celu BEZ kary
+			matrix y_bez_kary = ff3T(optX.x);
+
 			// Oblicz r = sqrt(x1^2 + x2^2)
-			double r = sqrt(optX.x(0)*optX.x(0) + optX.x(1)*optX.x(1));
-			
-			cout << fixed << (i+1) << "," << x0(0) << "," << x0(1) << ","
-			     << optX.x(0) << "," << optX.x(1) << "," << optX.y(0) << ","
-			     << r << "," << solution::f_calls << endl;
+			double r = sqrt(optX.x(0) * optX.x(0) + optX.x(1) * optX.x(1));
+
+			cout << fixed << (i + 1) << "," << x0(0) << "," << x0(1) << ","
+				 << optX.x(0) << "," << optX.x(1) << "," << r << ","
+				 << y_bez_kary(0) << "," << solution::f_calls << endl;
 		}
 	}
 
 	// ========== PROBLEM RZECZYWISTY ==========
 	cout << "\n=== PROBLEM RZECZYWISTY ===" << endl;
 	cout << "v0x,omega,x_end,f_calls" << endl;
-	
+
 	// Punkt początkowy dla problemu rzeczywistego
 	matrix x0_R(2, 1);
-	x0_R(0) = 0.0;   // v0x początkowe
-	x0_R(1) = 0.0;   // omega początkowe
-	
+	x0_R(0) = 0.0; // v0x początkowe
+	x0_R(1) = 0.0; // omega początkowe
+
 	// Parametry dla funkcji kary
 	matrix params_R(2, 1);
-	params_R(0) = 1.0;  // początkowy współczynnik kary (dummy dla zgodności z pen)
+	params_R(0) = 1.0; // początkowy współczynnik kary (dummy dla zgodności z pen)
 	params_R(1) = 1.0;
-	
+
 	solution::clear_calls();
-	
+
 	// Zewnętrzna funkcja kary
 	optX = pen(ff3R, x0_R, 1.0, 2.0, epsilon, Nmax, params_R, NAN);
-	
+
 	cout << fixed << optX.x(0) << "," << optX.x(1) << "," << -optX.y(0) << "," << solution::f_calls << endl;
 }
 
 void lab4()
 {
-
 }
 
 void lab5()
 {
-
 }
 
 void lab6()
 {
-
 }
