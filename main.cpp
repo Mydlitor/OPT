@@ -245,7 +245,7 @@ void lab3()
 	double beta = 0.5;
 	double gamma = 2.0;
 	double delta = 0.5;
-	double epsilon = 1e-3;
+	double epsilon = 1e-2;
 	int Nmax = 10000;
 	double s = 0.5;
 
@@ -287,7 +287,7 @@ void lab3()
 			solution::clear_calls();
 
 			// Zewnętrzna funkcja kary: c rośnie (dc > 1)
-			optX = pen(ff3T_zewn, x0, 1.0, 2.0, epsilon, Nmax, params, NAN);
+			optX = pen(ff3T_zewn, x0, 0.5, 1.5, epsilon, Nmax, params, NAN);
 
 			// Oblicz wartość funkcji celu BEZ kary
 			matrix y_bez_kary = ff3T(optX.x); 
@@ -330,7 +330,7 @@ void lab3()
 			solution::clear_calls();
 
 			// Wewnętrzna funkcja kary: c maleje (dc < 1)
-			optX = pen(ff3T_wewn, x0, 10.0, 0.5, epsilon, Nmax, params, NAN);
+			optX = pen(ff3T_wewn, x0, 5.0, 0.5, epsilon, Nmax, params, NAN);
 
 			// Oblicz wartość funkcji celu BEZ kary
 			matrix y_bez_kary = ff3T(optX.x);

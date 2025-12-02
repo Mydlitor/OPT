@@ -546,7 +546,7 @@ solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc
 		double gamma = 2.0;
 		double delta = 0.5;
 		double s = 0.5;
-		double eps_NM = 1e-3;
+		double eps_NM = 1e-2;
 		
 		matrix x_prev = x0;
 		matrix x_curr = x0;
