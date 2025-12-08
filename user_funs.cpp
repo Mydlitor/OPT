@@ -383,6 +383,8 @@ matrix ff4R_cost(matrix theta, matrix ud1, matrix ud2) {
     int m = size[0]; // number of samples
     delete[] size;
     
+    const double EPSILON = 1e-15; // Small value to avoid log(0)
+    
     double J = 0.0;
     for (int i = 0; i < m; i++) {
         // Compute h = 1 / (1 + exp(-theta^T * x^(i)))
@@ -395,8 +397,7 @@ matrix ff4R_cost(matrix theta, matrix ud1, matrix ud2) {
         double y = m2d(ud2(i));
         
         // J += y * log(h) + (1-y) * log(1-h)
-        double epsilon = 1e-15; // to avoid log(0)
-        h = fmax(epsilon, fmin(1.0 - epsilon, h));
+        h = fmax(EPSILON, fmin(1.0 - EPSILON, h));
         J += y * log(h) + (1.0 - y) * log(1.0 - h);
     }
     

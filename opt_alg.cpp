@@ -736,7 +736,7 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 		matrix grad;
 		
 		int iteration = 0;
-		int max_iterations = 10000; // Maximum iterations to prevent infinite loops
+		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
 		
 		while (true) {
 			// Compute gradient
@@ -748,7 +748,7 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 				break;
 			}
 			
-			if (solution::f_calls > Nmax || iteration >= max_iterations) {
+			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
 				Xopt.flag = 0;
 				break;
 			}
@@ -832,7 +832,7 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 		matrix grad_prev;
 		
 		int iteration = 0;
-		int max_iterations = 10000; // Maximum iterations to prevent infinite loops
+		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
 		
 		while (true) {
 			// Check gradient norm for convergence
@@ -841,7 +841,7 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 				break;
 			}
 			
-			if (solution::f_calls > Nmax || iteration >= max_iterations) {
+			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
 				Xopt.flag = 0;
 				break;
 			}
@@ -936,7 +936,7 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 		matrix grad;
 		
 		int iteration = 0;
-		int max_iterations = 10000; // Maximum iterations to prevent infinite loops
+		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
 		
 		while (true) {
 			// Compute gradient
@@ -948,7 +948,7 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 				break;
 			}
 			
-			if (solution::f_calls > Nmax || iteration >= max_iterations) {
+			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
 				Xopt.flag = 0;
 				break;
 			}

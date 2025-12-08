@@ -22,6 +22,8 @@ int main(int argc, char *argv[])
 {
 	try
 	{
+		// Current lab: Lab4 - Gradient-based optimization
+		// Change this line to switch between different labs
 		lab4();
 	}
 	catch (string EX_INFO)
