@@ -330,3 +330,115 @@ matrix ff3R(matrix x, matrix ud1, matrix ud2) {
     
     return matrix(f);
 }
+
+// ====== LAB 4 FUNCTIONS ======
+
+// Test function: f(x1,x2) = (1/6)x1^6 - 1.05*x1^4 + 2*x1^2 + x2^2 + x1*x2
+matrix ff4T(matrix x, matrix ud1, matrix ud2) {
+    double x1 = m2d(x(0));
+    double x2 = m2d(x(1));
+    
+    double f = (1.0/6.0) * pow(x1, 6) - 1.05 * pow(x1, 4) + 2.0 * pow(x1, 2) + pow(x2, 2) + x1 * x2;
+    
+    return matrix(f);
+}
+
+// Gradient of test function
+matrix gf4T(matrix x, matrix ud1, matrix ud2) {
+    double x1 = m2d(x(0));
+    double x2 = m2d(x(1));
+    
+    matrix grad(2, 1);
+    // df/dx1 = x1^5 - 4.2*x1^3 + 4*x1 + x2
+    grad(0) = pow(x1, 5) - 4.2 * pow(x1, 3) + 4.0 * x1 + x2;
+    // df/dx2 = 2*x2 + x1
+    grad(1) = 2.0 * x2 + x1;
+    
+    return grad;
+}
+
+// Hessian of test function
+matrix Hf4T(matrix x, matrix ud1, matrix ud2) {
+    double x1 = m2d(x(0));
+    double x2 = m2d(x(1));
+    
+    matrix H(2, 2);
+    // d2f/dx1dx1 = 5*x1^4 - 12.6*x1^2 + 4
+    H(0, 0) = 5.0 * pow(x1, 4) - 12.6 * pow(x1, 2) + 4.0;
+    // d2f/dx1dx2 = 1
+    H(0, 1) = 1.0;
+    // d2f/dx2dx1 = 1
+    H(1, 0) = 1.0;
+    // d2f/dx2dx2 = 2
+    H(1, 1) = 2.0;
+    
+    return H;
+}
+
+// Logistic regression cost function J(theta)
+// ud1 should contain X data (m x 3 matrix with bias column)
+// ud2 should contain Y data (m x 1 matrix)
+matrix ff4R_cost(matrix theta, matrix ud1, matrix ud2) {
+    int* size = get_size(ud1);
+    int m = size[0]; // number of samples
+    delete[] size;
+    
+    double J = 0.0;
+    for (int i = 0; i < m; i++) {
+        // Compute h = 1 / (1 + exp(-theta^T * x^(i)))
+        double z = 0.0;
+        for (int j = 0; j < 3; j++) {
+            z += m2d(theta(j)) * m2d(ud1(i, j));
+        }
+        double h = 1.0 / (1.0 + exp(-z));
+        
+        double y = m2d(ud2(i));
+        
+        // J += y * log(h) + (1-y) * log(1-h)
+        double epsilon = 1e-15; // to avoid log(0)
+        h = fmax(epsilon, fmin(1.0 - epsilon, h));
+        J += y * log(h) + (1.0 - y) * log(1.0 - h);
+    }
+    
+    J = -J / m;
+    
+    return matrix(J);
+}
+
+// Gradient of logistic regression cost function
+// ud1 should contain X data (m x 3 matrix with bias column)
+// ud2 should contain Y data (m x 1 matrix)
+matrix gf4R_grad(matrix theta, matrix ud1, matrix ud2) {
+    int* size = get_size(ud1);
+    int m = size[0]; // number of samples
+    delete[] size;
+    
+    matrix grad(3, 1);
+    grad(0) = 0.0;
+    grad(1) = 0.0;
+    grad(2) = 0.0;
+    
+    for (int i = 0; i < m; i++) {
+        // Compute h = 1 / (1 + exp(-theta^T * x^(i)))
+        double z = 0.0;
+        for (int j = 0; j < 3; j++) {
+            z += m2d(theta(j)) * m2d(ud1(i, j));
+        }
+        double h = 1.0 / (1.0 + exp(-z));
+        
+        double y = m2d(ud2(i));
+        double diff = h - y;
+        
+        // grad(j) += (h - y) * x_j^(i)
+        for (int j = 0; j < 3; j++) {
+            grad(j) = grad(j) + diff * m2d(ud1(i, j));
+        }
+    }
+    
+    // Average over all samples
+    for (int j = 0; j < 3; j++) {
+        grad(j) = grad(j) / m;
+    }
+    
+    return grad;
+}

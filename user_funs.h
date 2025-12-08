@@ -16,3 +16,8 @@ matrix ff3T_zewn(matrix, matrix = NAN, matrix = NAN);
 matrix ff3T_wewn(matrix, matrix = NAN, matrix = NAN);
 matrix ff3R(matrix, matrix = NAN, matrix = NAN);
 matrix df3(double, matrix, matrix = NAN, matrix = NAN);
+matrix ff4T(matrix, matrix = NAN, matrix = NAN);
+matrix gf4T(matrix, matrix = NAN, matrix = NAN);
+matrix Hf4T(matrix, matrix = NAN, matrix = NAN);
+matrix ff4R_cost(matrix, matrix = NAN, matrix = NAN);
+matrix gf4R_grad(matrix, matrix = NAN, matrix = NAN);

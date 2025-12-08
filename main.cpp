@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		lab3();
+		lab4();
 	}
 	catch (string EX_INFO)
 	{
@@ -362,6 +362,98 @@ void lab3()
 
 void lab4()
 {
+	cout.precision(10);
+	
+	// Test validation of logistic regression cost and gradient
+	cout << "=== VALIDATING LOGISTIC REGRESSION ===" << endl;
+	
+	// Load data
+	ifstream xfile("XData.txt");
+	ifstream yfile("YData.txt");
+	
+	if (!xfile.is_open() || !yfile.is_open()) {
+		cerr << "Error: Could not open data files" << endl;
+		return;
+	}
+	
+	// Count rows
+	int m = 0;
+	string line;
+	while (getline(yfile, line)) m++;
+	yfile.close();
+	yfile.open("YData.txt");
+	
+	// Create data matrices
+	matrix X(m, 3); // 3 columns: bias (1), x1, x2
+	matrix Y(m, 1);
+	
+	// Read data
+	for (int i = 0; i < m; i++) {
+		double x1, x2;
+		xfile >> x1 >> x2;
+		X(i, 0) = 1.0; // bias term
+		X(i, 1) = x1;
+		X(i, 2) = x2;
+		
+		double y;
+		yfile >> y;
+		Y(i, 0) = y;
+	}
+	
+	xfile.close();
+	yfile.close();
+	
+	// Test with theta = [0, 0, 0]
+	matrix theta0(3, 1);
+	theta0(0) = 0.0;
+	theta0(1) = 0.0;
+	theta0(2) = 0.0;
+	
+	matrix J0 = ff4R_cost(theta0, X, Y);
+	matrix grad0 = gf4R_grad(theta0, X, Y);
+	
+	cout << "Theta = [0, 0, 0]^T" << endl;
+	cout << "J(theta) = " << J0(0) << " (expected ~2.72715)" << endl;
+	cout << "grad J = [" << grad0(0) << ", " << grad0(1) << ", " << grad0(2) 
+	     << "] (expected ~[0.29985, 13.6056, 13.3547])" << endl;
+	
+	// Test function validation
+	cout << "\n=== TEST FUNCTION VALIDATION ===" << endl;
+	matrix x_test(2, 1);
+	x_test(0) = 0.0;
+	x_test(1) = 0.0;
+	
+	matrix f_val = ff4T(x_test);
+	matrix g_val = gf4T(x_test);
+	matrix H_val = Hf4T(x_test);
+	
+	cout << "At x=[0,0]: f=" << f_val(0) << ", grad=[" << g_val(0) << "," << g_val(1) << "]" << endl;
+	cout << "Hessian: [[" << H_val(0,0) << "," << H_val(0,1) << "][" << H_val(1,0) << "," << H_val(1,1) << "]]" << endl;
+	
+	// Simple optimization test
+	cout << "\n=== SIMPLE OPTIMIZATION TEST ===" << endl;
+	
+	matrix x0(2, 1);
+	x0(0) = 1.0;
+	x0(1) = 1.0;
+	
+	double epsilon = 1e-3;
+	int Nmax = 1000;
+	
+	solution::clear_calls();
+	solution opt_sd = SD(ff4T, gf4T, x0, 0.05, epsilon, Nmax);
+	cout << "SD (h=0.05): x*=[" << opt_sd.x(0) << "," << opt_sd.x(1) << "], f*=" << opt_sd.y(0) 
+	     << ", calls=" << solution::f_calls << ", flag=" << opt_sd.flag << endl;
+	
+	solution::clear_calls();
+	solution opt_cg = CG(ff4T, gf4T, x0, 0.05, epsilon, Nmax);
+	cout << "CG (h=0.05): x*=[" << opt_cg.x(0) << "," << opt_cg.x(1) << "], f*=" << opt_cg.y(0) 
+	     << ", calls=" << solution::f_calls << ", flag=" << opt_cg.flag << endl;
+	
+	solution::clear_calls();
+	solution opt_newton = Newton(ff4T, gf4T, Hf4T, x0, 0.01, epsilon, Nmax);
+	cout << "Newton (h=0.01): x*=[" << opt_newton.x(0) << "," << opt_newton.x(1) << "], f*=" << opt_newton.y(0) 
+	     << ", calls=" << solution::f_calls << ", flag=" << opt_newton.flag << endl;
 }
 
 void lab5()
