@@ -736,6 +736,7 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 		matrix grad;
 		
 		int iteration = 0;
+		int max_iterations = 10000; // Maximum iterations to prevent infinite loops
 		
 		while (true) {
 			// Compute gradient
@@ -747,7 +748,7 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 				break;
 			}
 			
-			if (solution::f_calls > Nmax) {
+			if (solution::f_calls > Nmax || iteration >= max_iterations) {
 				Xopt.flag = 0;
 				break;
 			}
@@ -776,7 +777,8 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 				double fc = m2d(ff(x_c, ud1, ud2));
 				double fd = m2d(ff(x_d, ud1, ud2));
 				
-				while (b - a > tol && solution::f_calls < Nmax) {
+				int ls_iters = 0;
+				while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
 					if (fc < fd) {
 						b = d_val;
 						d_val = c;
@@ -792,6 +794,7 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 						x_d = XB.x + d_val * d;
 						fd = m2d(ff(x_d, ud1, ud2));
 					}
+					ls_iters++;
 				}
 				
 				step_size = (a + b) / 2.0;
@@ -829,6 +832,7 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 		matrix grad_prev;
 		
 		int iteration = 0;
+		int max_iterations = 10000; // Maximum iterations to prevent infinite loops
 		
 		while (true) {
 			// Check gradient norm for convergence
@@ -837,7 +841,7 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 				break;
 			}
 			
-			if (solution::f_calls > Nmax) {
+			if (solution::f_calls > Nmax || iteration >= max_iterations) {
 				Xopt.flag = 0;
 				break;
 			}
@@ -862,7 +866,8 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 				double fc = m2d(ff(x_c, ud1, ud2));
 				double fd = m2d(ff(x_d, ud1, ud2));
 				
-				while (b - a > tol && solution::f_calls < Nmax) {
+				int ls_iters = 0;
+				while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
 					if (fc < fd) {
 						b = d_val;
 						d_val = c;
@@ -878,6 +883,7 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 						x_d = XB.x + d_val * d;
 						fd = m2d(ff(x_d, ud1, ud2));
 					}
+					ls_iters++;
 				}
 				
 				step_size = (a + b) / 2.0;
@@ -930,6 +936,7 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 		matrix grad;
 		
 		int iteration = 0;
+		int max_iterations = 10000; // Maximum iterations to prevent infinite loops
 		
 		while (true) {
 			// Compute gradient
@@ -941,7 +948,7 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 				break;
 			}
 			
-			if (solution::f_calls > Nmax) {
+			if (solution::f_calls > Nmax || iteration >= max_iterations) {
 				Xopt.flag = 0;
 				break;
 			}
@@ -973,7 +980,8 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 				double fc = m2d(ff(x_c, ud1, ud2));
 				double fd = m2d(ff(x_d, ud1, ud2));
 				
-				while (b - a > tol && solution::f_calls < Nmax) {
+				int ls_iters = 0;
+				while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
 					if (fc < fd) {
 						b = d_val;
 						d_val = c;
@@ -989,6 +997,7 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 						x_d = XB.x + d_val * d;
 						fd = m2d(ff(x_d, ud1, ud2));
 					}
+					ls_iters++;
 				}
 				
 				step_size = (a + b) / 2.0;
