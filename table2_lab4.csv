@@ -1,3 +1,0 @@
-Method,StepSize,Theta0,Theta1,Theta2,J,Accuracy,FCalls
-SD_fixed,0.05,-36.9447,2.09426,-0.555891,8.71032,0.66,10001
-SD_fixed,0.25,-183.337,15.1078,2.68878,13.4704,0.61,10001

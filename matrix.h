@@ -1,4 +1,4 @@
-//Ten plik nie powinien byæ edytowany
+//Ten plik nie powinien byÃ¦ edytowany
 
 #pragma once
 
@@ -69,4 +69,3 @@ matrix get_col(const matrix&, int); // throw (string);
 matrix get_row(const matrix&, int); // throw (string);
 ostream& operator<<(ostream&, const matrix&);
 istream& operator>>(istream&, matrix&); // throw (string);
-

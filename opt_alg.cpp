@@ -724,6 +724,20 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 	}
 }
 
+// Global variables for line search (needed because function pointers can't capture state)
+static matrix (*g_ff_line_search)(matrix, matrix, matrix) = nullptr;
+static matrix g_x_base_line_search;
+static matrix g_direction_line_search;
+static matrix g_ud1_line_search;
+static matrix g_ud2_line_search;
+
+// Wrapper function for line search: evaluates f(x_base + alpha * direction)
+matrix line_search_objective(matrix alpha, matrix ud1, matrix ud2)
+{
+	matrix x_eval = g_x_base_line_search + m2d(alpha) * g_direction_line_search;
+	return g_ff_line_search(x_eval, g_ud1_line_search, g_ud2_line_search);
+}
+
 solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
@@ -761,42 +775,15 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 			if (h0 > 0) {
 				step_size = h0;
 			} else {
-				// Line search using golden section
-				// Search for optimal alpha in [0, 2]
-				double a = 0.0;
-				double b = 2.0;
-				double tol = 1e-6;
-				double alpha_gold = (sqrt(5.0) - 1.0) / 2.0;
+				// Use existing golden function for line search
+				g_ff_line_search = ff;
+				g_x_base_line_search = XB.x;
+				g_direction_line_search = d;
+				g_ud1_line_search = ud1;
+				g_ud2_line_search = ud2;
 				
-				double c = b - alpha_gold * (b - a);
-				double d_val = a + alpha_gold * (b - a);
-				
-				matrix x_c = XB.x + c * d;
-				matrix x_d = XB.x + d_val * d;
-				double fc = m2d(ff(x_c, ud1, ud2));
-				double fd = m2d(ff(x_d, ud1, ud2));
-				
-				int ls_iters = 0;
-				while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
-					if (fc < fd) {
-						b = d_val;
-						d_val = c;
-						fd = fc;
-						c = b - alpha_gold * (b - a);
-						x_c = XB.x + c * d;
-						fc = m2d(ff(x_c, ud1, ud2));
-					} else {
-						a = c;
-						c = d_val;
-						fc = fd;
-						d_val = a + alpha_gold * (b - a);
-						x_d = XB.x + d_val * d;
-						fd = m2d(ff(x_d, ud1, ud2));
-					}
-					ls_iters++;
-				}
-				
-				step_size = (a + b) / 2.0;
+				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
+				step_size = m2d(alpha_opt.x);
 			}
 			
 			// Update position
@@ -851,41 +838,15 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 			if (h0 > 0) {
 				step_size = h0;
 			} else {
-				// Line search using golden section
-				double a = 0.0;
-				double b = 2.0;
-				double tol = 1e-6;
-				double alpha_gold = (sqrt(5.0) - 1.0) / 2.0;
+				// Use existing golden function for line search
+				g_ff_line_search = ff;
+				g_x_base_line_search = XB.x;
+				g_direction_line_search = d;
+				g_ud1_line_search = ud1;
+				g_ud2_line_search = ud2;
 				
-				double c = b - alpha_gold * (b - a);
-				double d_val = a + alpha_gold * (b - a);
-				
-				matrix x_c = XB.x + c * d;
-				matrix x_d = XB.x + d_val * d;
-				double fc = m2d(ff(x_c, ud1, ud2));
-				double fd = m2d(ff(x_d, ud1, ud2));
-				
-				int ls_iters = 0;
-				while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
-					if (fc < fd) {
-						b = d_val;
-						d_val = c;
-						fd = fc;
-						c = b - alpha_gold * (b - a);
-						x_c = XB.x + c * d;
-						fc = m2d(ff(x_c, ud1, ud2));
-					} else {
-						a = c;
-						c = d_val;
-						fc = fd;
-						d_val = a + alpha_gold * (b - a);
-						x_d = XB.x + d_val * d;
-						fd = m2d(ff(x_d, ud1, ud2));
-					}
-					ls_iters++;
-				}
-				
-				step_size = (a + b) / 2.0;
+				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
+				step_size = m2d(alpha_opt.x);
 			}
 			
 			// Update position
@@ -964,41 +925,15 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 			if (h0 > 0) {
 				step_size = h0;
 			} else {
-				// Line search using golden section
-				double a = 0.0;
-				double b = 2.0;
-				double tol = 1e-6;
-				double alpha_gold = (sqrt(5.0) - 1.0) / 2.0;
+				// Use existing golden function for line search
+				g_ff_line_search = ff;
+				g_x_base_line_search = XB.x;
+				g_direction_line_search = d;
+				g_ud1_line_search = ud1;
+				g_ud2_line_search = ud2;
 				
-				double c = b - alpha_gold * (b - a);
-				double d_val = a + alpha_gold * (b - a);
-				
-				matrix x_c = XB.x + c * d;
-				matrix x_d = XB.x + d_val * d;
-				double fc = m2d(ff(x_c, ud1, ud2));
-				double fd = m2d(ff(x_d, ud1, ud2));
-				
-				int ls_iters = 0;
-				while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
-					if (fc < fd) {
-						b = d_val;
-						d_val = c;
-						fd = fc;
-						c = b - alpha_gold * (b - a);
-						x_c = XB.x + c * d;
-						fc = m2d(ff(x_c, ud1, ud2));
-					} else {
-						a = c;
-						c = d_val;
-						fc = fd;
-						d_val = a + alpha_gold * (b - a);
-						x_d = XB.x + d_val * d;
-						fd = m2d(ff(x_d, ud1, ud2));
-					}
-					ls_iters++;
-				}
-				
-				step_size = (a + b) / 2.0;
+				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
+				step_size = m2d(alpha_opt.x);
 			}
 			
 			// Update position
