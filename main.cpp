@@ -621,6 +621,33 @@ void lab4()
 	
 	table2.close();
 	
+	// ============================================================
+	// TABLE: CONJUGATE GRADIENT METHOD RESULTS
+	// ============================================================
+	cout << "\n=== TABELA: METODA GRADIENTÓW SPRZĘŻONYCH ===" << endl;
+	cout << "Długość kroku | θ0*        | θ1*        | θ2*        | J(θ*)      | P(θ*)      | g_calls" << endl;
+	cout << "----------------------------------------------------------------------------------------------" << endl;
+	
+	double cg_table_steps[] = {0.01, 0.001, 0.0001};
+	
+	for (int i = 0; i < 3; i++) {
+		double step = cg_table_steps[i];
+		
+		solution::clear_calls();
+		solution opt = CG(ff4R_cost, gf4R_grad, theta0, step, epsilon, Nmax, X, Y);
+		double accuracy = compute_accuracy(opt.x);
+		
+		cout << left << setw(14) << step 
+		     << "| " << setw(11) << opt.x(0) 
+		     << "| " << setw(11) << opt.x(1) 
+		     << "| " << setw(11) << opt.x(2) 
+		     << "| " << setw(11) << opt.y(0) 
+		     << "| " << setw(11) << accuracy 
+		     << "| " << solution::f_calls << endl;
+	}
+	
+	cout << endl;
+	
 	// Save decision boundary data
 	cout << "\nBest model: theta=[" << best_solution.x(0) << "," << best_solution.x(1) 
 	     << "," << best_solution.x(2) << "], accuracy=" << best_accuracy << endl;
