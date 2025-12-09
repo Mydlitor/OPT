@@ -724,6 +724,51 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 	}
 }
 
+// Helper function for golden section line search along a direction
+// Returns optimal step size alpha for x_new = x_current + alpha * direction
+double golden_line_search(matrix(*ff)(matrix, matrix, matrix), matrix x_current, matrix direction, 
+                          double a, double b, double tol, int Nmax, matrix ud1, matrix ud2)
+{
+	try
+	{
+		double alpha_gold = (sqrt(5.0) - 1.0) / 2.0;
+		
+		double c = b - alpha_gold * (b - a);
+		double d_val = a + alpha_gold * (b - a);
+		
+		matrix x_c = x_current + c * direction;
+		matrix x_d = x_current + d_val * direction;
+		double fc = m2d(ff(x_c, ud1, ud2));
+		double fd = m2d(ff(x_d, ud1, ud2));
+		
+		int ls_iters = 0;
+		while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
+			if (fc < fd) {
+				b = d_val;
+				d_val = c;
+				fd = fc;
+				c = b - alpha_gold * (b - a);
+				x_c = x_current + c * direction;
+				fc = m2d(ff(x_c, ud1, ud2));
+			} else {
+				a = c;
+				c = d_val;
+				fc = fd;
+				d_val = a + alpha_gold * (b - a);
+				x_d = x_current + d_val * direction;
+				fd = m2d(ff(x_d, ud1, ud2));
+			}
+			ls_iters++;
+		}
+		
+		return (a + b) / 2.0;
+	}
+	catch (string ex_info)
+	{
+		throw ("double golden_line_search(...):\n" + ex_info);
+	}
+}
+
 solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
@@ -761,42 +806,8 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 			if (h0 > 0) {
 				step_size = h0;
 			} else {
-				// Line search using golden section
-				// Search for optimal alpha in [0, 2]
-				double a = 0.0;
-				double b = 2.0;
-				double tol = 1e-6;
-				double alpha_gold = (sqrt(5.0) - 1.0) / 2.0;
-				
-				double c = b - alpha_gold * (b - a);
-				double d_val = a + alpha_gold * (b - a);
-				
-				matrix x_c = XB.x + c * d;
-				matrix x_d = XB.x + d_val * d;
-				double fc = m2d(ff(x_c, ud1, ud2));
-				double fd = m2d(ff(x_d, ud1, ud2));
-				
-				int ls_iters = 0;
-				while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
-					if (fc < fd) {
-						b = d_val;
-						d_val = c;
-						fd = fc;
-						c = b - alpha_gold * (b - a);
-						x_c = XB.x + c * d;
-						fc = m2d(ff(x_c, ud1, ud2));
-					} else {
-						a = c;
-						c = d_val;
-						fc = fd;
-						d_val = a + alpha_gold * (b - a);
-						x_d = XB.x + d_val * d;
-						fd = m2d(ff(x_d, ud1, ud2));
-					}
-					ls_iters++;
-				}
-				
-				step_size = (a + b) / 2.0;
+				// Use golden section line search
+				step_size = golden_line_search(ff, XB.x, d, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
 			}
 			
 			// Update position
@@ -851,41 +862,8 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 			if (h0 > 0) {
 				step_size = h0;
 			} else {
-				// Line search using golden section
-				double a = 0.0;
-				double b = 2.0;
-				double tol = 1e-6;
-				double alpha_gold = (sqrt(5.0) - 1.0) / 2.0;
-				
-				double c = b - alpha_gold * (b - a);
-				double d_val = a + alpha_gold * (b - a);
-				
-				matrix x_c = XB.x + c * d;
-				matrix x_d = XB.x + d_val * d;
-				double fc = m2d(ff(x_c, ud1, ud2));
-				double fd = m2d(ff(x_d, ud1, ud2));
-				
-				int ls_iters = 0;
-				while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
-					if (fc < fd) {
-						b = d_val;
-						d_val = c;
-						fd = fc;
-						c = b - alpha_gold * (b - a);
-						x_c = XB.x + c * d;
-						fc = m2d(ff(x_c, ud1, ud2));
-					} else {
-						a = c;
-						c = d_val;
-						fc = fd;
-						d_val = a + alpha_gold * (b - a);
-						x_d = XB.x + d_val * d;
-						fd = m2d(ff(x_d, ud1, ud2));
-					}
-					ls_iters++;
-				}
-				
-				step_size = (a + b) / 2.0;
+				// Use golden section line search
+				step_size = golden_line_search(ff, XB.x, d, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
 			}
 			
 			// Update position
@@ -964,41 +942,8 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 			if (h0 > 0) {
 				step_size = h0;
 			} else {
-				// Line search using golden section
-				double a = 0.0;
-				double b = 2.0;
-				double tol = 1e-6;
-				double alpha_gold = (sqrt(5.0) - 1.0) / 2.0;
-				
-				double c = b - alpha_gold * (b - a);
-				double d_val = a + alpha_gold * (b - a);
-				
-				matrix x_c = XB.x + c * d;
-				matrix x_d = XB.x + d_val * d;
-				double fc = m2d(ff(x_c, ud1, ud2));
-				double fd = m2d(ff(x_d, ud1, ud2));
-				
-				int ls_iters = 0;
-				while (b - a > tol && solution::f_calls < Nmax && ls_iters < 100) {
-					if (fc < fd) {
-						b = d_val;
-						d_val = c;
-						fd = fc;
-						c = b - alpha_gold * (b - a);
-						x_c = XB.x + c * d;
-						fc = m2d(ff(x_c, ud1, ud2));
-					} else {
-						a = c;
-						c = d_val;
-						fc = fd;
-						d_val = a + alpha_gold * (b - a);
-						x_d = XB.x + d_val * d;
-						fd = m2d(ff(x_d, ud1, ud2));
-					}
-					ls_iters++;
-				}
-				
-				step_size = (a + b) / 2.0;
+				// Use golden section line search
+				step_size = golden_line_search(ff, XB.x, d, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
 			}
 			
 			// Update position
