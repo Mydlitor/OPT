@@ -31,6 +31,17 @@ def load_history(filename):
     """Load iteration history from CSV file, filtering out NaN and inf values"""
     try:
         df = pd.read_csv(filename)
+        
+        # Check if required columns exist
+        if 'x1' not in df.columns or 'x2' not in df.columns:
+            print(f"Warning: {filename} missing required columns 'x1' or 'x2'")
+            return None
+        
+        # Check if DataFrame is empty
+        if df.empty:
+            print(f"Warning: {filename} is empty")
+            return None
+        
         hist = df[['x1', 'x2']].values
         
         # Filter out rows with NaN or inf values
