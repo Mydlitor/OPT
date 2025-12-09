@@ -733,14 +733,13 @@ solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 		Xopt.fit_fun(ff, ud1, ud2);
 		
 		solution XB = Xopt;
-		matrix grad;
 		
 		int iteration = 0;
 		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
 		
 		while (true) {
-			// Compute gradient
-			grad = gf(XB.x, ud1, ud2);
+			// Compute gradient using solution class method
+			matrix grad = XB.grad(gf, ud1, ud2);
 			
 			// Check gradient norm for convergence
 			if (norm(grad) < epsilon) {
@@ -827,7 +826,7 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 		Xopt.fit_fun(ff, ud1, ud2);
 		
 		solution XB = Xopt;
-		matrix grad = gf(XB.x, ud1, ud2);
+		matrix grad = XB.grad(gf, ud1, ud2);
 		matrix d = -grad; // Initial direction
 		matrix grad_prev;
 		
@@ -893,9 +892,9 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 			Xopt.x = XB.x + step_size * d;
 			Xopt.fit_fun(ff, ud1, ud2);
 			
-			// Compute new gradient
+			// Compute new gradient using solution class method
 			grad_prev = grad;
-			grad = gf(Xopt.x, ud1, ud2);
+			grad = Xopt.grad(gf, ud1, ud2);
 			
 			// Fletcher-Reeves formula: beta = ||grad_new||^2 / ||grad_old||^2
 			double grad_norm_sq = norm(grad) * norm(grad);
@@ -933,14 +932,13 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 		Xopt.fit_fun(ff, ud1, ud2);
 		
 		solution XB = Xopt;
-		matrix grad;
 		
 		int iteration = 0;
 		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
 		
 		while (true) {
-			// Compute gradient
-			grad = gf(XB.x, ud1, ud2);
+			// Compute gradient using solution class method
+			matrix grad = XB.grad(gf, ud1, ud2);
 			
 			// Check gradient norm for convergence
 			if (norm(grad) < epsilon) {
@@ -953,8 +951,8 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 				break;
 			}
 			
-			// Compute Hessian
-			matrix H = Hf(XB.x, ud1, ud2);
+			// Compute Hessian using solution class method
+			matrix H = XB.hess(Hf, ud1, ud2);
 			
 			// Newton direction: d = -H^{-1} * grad
 			matrix H_inv = inv(H);
