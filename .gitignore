@@ -371,3 +371,11 @@ out
 # Linux executable
 OPT
 opt_program
+
+# Generated output files from lab4
+history_*.csv
+wykres*.png
+table*_lab4.csv
+decision_boundary_lab4.csv
+symulacja_*.csv
+
