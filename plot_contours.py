@@ -28,10 +28,25 @@ labels = {
 }
 
 def load_history(filename):
-    """Load iteration history from CSV file"""
+    """Load iteration history from CSV file, filtering out NaN and inf values"""
     try:
         df = pd.read_csv(filename)
-        return df[['x1', 'x2']].values
+        hist = df[['x1', 'x2']].values
+        
+        # Filter out rows with NaN or inf values
+        valid_mask = np.all(np.isfinite(hist), axis=1)
+        hist_filtered = hist[valid_mask]
+        
+        # If we filtered out some points, report it
+        if len(hist_filtered) < len(hist):
+            print(f"  Note: {filename} - filtered {len(hist) - len(hist_filtered)} invalid points, kept {len(hist_filtered)} valid points")
+        
+        # Return None if no valid points remain
+        if len(hist_filtered) == 0:
+            print(f"Warning: {filename} contains no valid points")
+            return None
+            
+        return hist_filtered
     except FileNotFoundError:
         print(f"Warning: File {filename} not found")
         return None
