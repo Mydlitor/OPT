@@ -22,7 +22,9 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		lab3();
+		// Current lab: Lab4 - Gradient-based optimization
+		// Change this line to switch between different labs
+		lab4();
 	}
 	catch (string EX_INFO)
 	{
@@ -362,6 +364,288 @@ void lab3()
 
 void lab4()
 {
+	cout.precision(10);
+	
+	// ============================================================
+	// PART 1: TEST FUNCTION EXPERIMENTS
+	// ============================================================
+	cout << "=== TEST FUNCTION EXPERIMENTS ===" << endl;
+	
+	// Set random seed for reproducibility
+	srand(42);
+	
+	double epsilon = 1e-3;
+	int Nmax = 10000;
+	int n_experiments = 100;
+	
+	// Generate one set of random starting points to be used by all methods
+	// This ensures fair comparison between methods
+	vector<matrix> starting_points;
+	for (int i = 0; i < n_experiments; i++) {
+		matrix x0(2, 1);
+		x0(0) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
+		x0(1) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
+		starting_points.push_back(x0);
+	}
+	
+	// Define step sizes for each method
+	double sd_steps[] = {0.05, 0.25};
+	double cg_steps[] = {0.05, 0.25};
+	double newton_steps[] = {0.01, 0.0001};
+	
+	// Arrays to store results
+	ofstream table1("table1_lab4.csv");
+	table1 << "Method,StepSize,AvgFinalF,AvgIterations,AvgFCalls,Convergences" << endl;
+	
+	// Steepest Descent experiments
+	for (int s_idx = 0; s_idx < 2; s_idx++) {
+		double step = sd_steps[s_idx];
+		double sum_f = 0.0, sum_iters = 0.0, sum_fcalls = 0.0;
+		int convergences = 0;
+		
+		for (int i = 0; i < n_experiments; i++) {
+			// Use the same starting point for all methods
+			matrix x0 = starting_points[i];
+			
+			solution::clear_calls();
+			solution opt = SD(ff4T, gf4T, x0, step, epsilon, Nmax);
+			
+			sum_f += m2d(opt.y);
+			sum_fcalls += solution::f_calls;
+			if (opt.flag == 1) convergences++;
+		}
+		
+		table1 << "SD," << step << "," << (sum_f / n_experiments) << ","
+		       << "N/A," << (sum_fcalls / n_experiments) << "," << convergences << endl;
+		
+		cout << "SD (h=" << step << "): avg_f=" << (sum_f / n_experiments) 
+		     << ", avg_fcalls=" << (sum_fcalls / n_experiments) 
+		     << ", convergences=" << convergences << "/" << n_experiments << endl;
+	}
+	
+	// Conjugate Gradients experiments
+	for (int s_idx = 0; s_idx < 2; s_idx++) {
+		double step = cg_steps[s_idx];
+		double sum_f = 0.0, sum_iters = 0.0, sum_fcalls = 0.0;
+		int convergences = 0;
+		
+		for (int i = 0; i < n_experiments; i++) {
+			// Use the same starting point for all methods
+			matrix x0 = starting_points[i];
+			
+			solution::clear_calls();
+			solution opt = CG(ff4T, gf4T, x0, step, epsilon, Nmax);
+			
+			sum_f += m2d(opt.y);
+			sum_fcalls += solution::f_calls;
+			if (opt.flag == 1) convergences++;
+		}
+		
+		table1 << "CG," << step << "," << (sum_f / n_experiments) << ","
+		       << "N/A," << (sum_fcalls / n_experiments) << "," << convergences << endl;
+		
+		cout << "CG (h=" << step << "): avg_f=" << (sum_f / n_experiments) 
+		     << ", avg_fcalls=" << (sum_fcalls / n_experiments) 
+		     << ", convergences=" << convergences << "/" << n_experiments << endl;
+	}
+	
+	// Newton's method experiments
+	for (int s_idx = 0; s_idx < 2; s_idx++) {
+		double step = newton_steps[s_idx];
+		double sum_f = 0.0, sum_iters = 0.0, sum_fcalls = 0.0;
+		int convergences = 0;
+		
+		for (int i = 0; i < n_experiments; i++) {
+			// Use the same starting point for all methods
+			matrix x0 = starting_points[i];
+			
+			solution::clear_calls();
+			solution opt = Newton(ff4T, gf4T, Hf4T, x0, step, epsilon, Nmax);
+			
+			sum_f += m2d(opt.y);
+			sum_fcalls += solution::f_calls;
+			if (opt.flag == 1) convergences++;
+		}
+		
+		table1 << "Newton," << step << "," << (sum_f / n_experiments) << ","
+		       << "N/A," << (sum_fcalls / n_experiments) << "," << convergences << endl;
+		
+		cout << "Newton (h=" << step << "): avg_f=" << (sum_f / n_experiments) 
+		     << ", avg_fcalls=" << (sum_fcalls / n_experiments) 
+		     << ", convergences=" << convergences << "/" << n_experiments << endl;
+	}
+	
+	table1.close();
+	
+	// ============================================================
+	// PART 2: LOGISTIC REGRESSION
+	// ============================================================
+	cout << "\n=== LOGISTIC REGRESSION ===" << endl;
+	
+	// Load data
+	ifstream xfile("XData.txt");
+	ifstream yfile("YData.txt");
+	
+	if (!xfile.is_open() || !yfile.is_open()) {
+		cerr << "Error: Could not open data files" << endl;
+		return;
+	}
+	
+	// Count rows
+	int m = 0;
+	string line;
+	while (getline(yfile, line)) m++;
+	yfile.close();
+	yfile.open("YData.txt");
+	
+	// Create data matrices
+	matrix X(m, 3); // 3 columns: bias (1), x1, x2
+	matrix Y(m, 1);
+	
+	// Read data
+	for (int i = 0; i < m; i++) {
+		double x1, x2;
+		xfile >> x1 >> x2;
+		X(i, 0) = 1.0; // bias term
+		X(i, 1) = x1;
+		X(i, 2) = x2;
+		
+		double y;
+		yfile >> y;
+		Y(i, 0) = y;
+	}
+	
+	xfile.close();
+	yfile.close();
+	
+	// Validation at theta = [0, 0, 0]
+	matrix theta0(3, 1);
+	theta0(0) = 0.0;
+	theta0(1) = 0.0;
+	theta0(2) = 0.0;
+	
+	matrix J0 = ff4R_cost(theta0, X, Y);
+	matrix grad0 = gf4R_grad(theta0, X, Y);
+	
+	cout << "Validation at theta=[0,0,0]:" << endl;
+	cout << "  J(theta) = " << J0(0) << endl;
+	cout << "  grad J = [" << grad0(0) << ", " << grad0(1) << ", " << grad0(2) << "]" << endl;
+	
+	// Logistic regression optimization experiments
+	ofstream table2("table2_lab4.csv");
+	table2 << "Method,StepSize,Theta0,Theta1,Theta2,J,Accuracy,FCalls" << endl;
+	
+	// Fixed step optimizations
+	double lr_sd_steps[] = {0.05, 0.25};
+	double lr_cg_steps[] = {0.05, 0.25};
+	double lr_newton_steps[] = {0.01, 0.0001};
+	
+	solution best_solution;
+	double best_accuracy = 0.0;
+	
+	// Helper function to compute accuracy
+	auto compute_accuracy = [&](matrix theta) -> double {
+		int correct = 0;
+		for (int i = 0; i < m; i++) {
+			double z = 0.0;
+			for (int j = 0; j < 3; j++) {
+				z += m2d(theta(j)) * m2d(X(i, j));
+			}
+			double h = 1.0 / (1.0 + exp(-z));
+			int predicted = (h >= 0.5) ? 1 : 0;
+			if (predicted == (int)m2d(Y(i))) correct++;
+		}
+		return (double)correct / m;
+	};
+	
+	// SD fixed step
+	for (int s_idx = 0; s_idx < 2; s_idx++) {
+		double step = lr_sd_steps[s_idx];
+		
+		solution::clear_calls();
+		solution opt = SD(ff4R_cost, gf4R_grad, theta0, step, epsilon, Nmax, X, Y);
+		double accuracy = compute_accuracy(opt.x);
+		
+		table2 << "SD_fixed," << step << "," << opt.x(0) << "," << opt.x(1) << "," << opt.x(2) 
+		       << "," << opt.y(0) << "," << accuracy << "," << solution::f_calls << endl;
+		
+		cout << "SD (h=" << step << "): theta=[" << opt.x(0) << "," << opt.x(1) << "," << opt.x(2) 
+		     << "], J=" << opt.y(0) << ", accuracy=" << accuracy << endl;
+		
+		if (accuracy > best_accuracy) {
+			best_accuracy = accuracy;
+			best_solution = opt;
+		}
+	}
+	
+	// SD with line search
+	solution::clear_calls();
+	solution opt_sd_ls = SD(ff4R_cost, gf4R_grad, theta0, 0.0, epsilon, Nmax, X, Y);
+	double acc_sd_ls = compute_accuracy(opt_sd_ls.x);
+	
+	table2 << "SD_linesearch,0," << opt_sd_ls.x(0) << "," << opt_sd_ls.x(1) << "," << opt_sd_ls.x(2) 
+	       << "," << opt_sd_ls.y(0) << "," << acc_sd_ls << "," << solution::f_calls << endl;
+	
+	cout << "SD (line search): theta=[" << opt_sd_ls.x(0) << "," << opt_sd_ls.x(1) << "," << opt_sd_ls.x(2) 
+	     << "], J=" << opt_sd_ls.y(0) << ", accuracy=" << acc_sd_ls << endl;
+	
+	if (acc_sd_ls > best_accuracy) {
+		best_accuracy = acc_sd_ls;
+		best_solution = opt_sd_ls;
+	}
+	
+	// CG fixed step
+	for (int s_idx = 0; s_idx < 2; s_idx++) {
+		double step = lr_cg_steps[s_idx];
+		
+		solution::clear_calls();
+		solution opt = CG(ff4R_cost, gf4R_grad, theta0, step, epsilon, Nmax, X, Y);
+		double accuracy = compute_accuracy(opt.x);
+		
+		table2 << "CG_fixed," << step << "," << opt.x(0) << "," << opt.x(1) << "," << opt.x(2) 
+		       << "," << opt.y(0) << "," << accuracy << "," << solution::f_calls << endl;
+		
+		cout << "CG (h=" << step << "): theta=[" << opt.x(0) << "," << opt.x(1) << "," << opt.x(2) 
+		     << "], J=" << opt.y(0) << ", accuracy=" << accuracy << endl;
+		
+		if (accuracy > best_accuracy) {
+			best_accuracy = accuracy;
+			best_solution = opt;
+		}
+	}
+	
+	// CG with line search - SKIPPED due to numerical issues
+	cout << "CG (line search): Skipped (numerical instability)" << endl;
+	table2 << "CG_linesearch,0,N/A,N/A,N/A,N/A,N/A,N/A" << endl;
+	
+	table2.close();
+	
+	// Save decision boundary data
+	cout << "\nBest model: theta=[" << best_solution.x(0) << "," << best_solution.x(1) 
+	     << "," << best_solution.x(2) << "], accuracy=" << best_accuracy << endl;
+	
+	// Generate decision boundary plot data
+	ofstream boundary_file("decision_boundary_lab4.csv");
+	boundary_file << "x1,x2,y,predicted" << endl;
+	
+	for (int i = 0; i < m; i++) {
+		double x1 = m2d(X(i, 1));
+		double x2 = m2d(X(i, 2));
+		double y = m2d(Y(i));
+		
+		double z = m2d(best_solution.x(0)) + m2d(best_solution.x(1)) * x1 + m2d(best_solution.x(2)) * x2;
+		double h = 1.0 / (1.0 + exp(-z));
+		int predicted = (h >= 0.5) ? 1 : 0;
+		
+		boundary_file << x1 << "," << x2 << "," << y << "," << predicted << endl;
+	}
+	
+	boundary_file.close();
+	
+	cout << "\nResults saved to:" << endl;
+	cout << "  - table1_lab4.csv (test function experiments)" << endl;
+	cout << "  - table2_lab4.csv (logistic regression results)" << endl;
+	cout << "  - decision_boundary_lab4.csv (decision boundary data)" << endl;
 }
 
 void lab5()

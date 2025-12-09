@@ -724,13 +724,78 @@ solution sym_NM(matrix(*ff)(matrix, matrix, matrix), matrix x0, double s, double
 	}
 }
 
+// Global variables for line search (needed because function pointers can't capture state)
+static matrix (*g_ff_line_search)(matrix, matrix, matrix) = nullptr;
+static matrix g_x_base_line_search;
+static matrix g_direction_line_search;
+static matrix g_ud1_line_search;
+static matrix g_ud2_line_search;
+
+// Wrapper function for line search: evaluates f(x_base + alpha * direction)
+matrix line_search_objective(matrix alpha, matrix ud1, matrix ud2)
+{
+	matrix x_eval = g_x_base_line_search + m2d(alpha) * g_direction_line_search;
+	return g_ff_line_search(x_eval, g_ud1_line_search, g_ud2_line_search);
+}
+
 solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
-
+		Xopt.x = x0;
+		Xopt.fit_fun(ff, ud1, ud2);
+		
+		solution XB = Xopt;
+		
+		int iteration = 0;
+		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
+		
+		while (true) {
+			// Compute gradient using solution class method
+			matrix grad = XB.grad(gf, ud1, ud2);
+			
+			// Check gradient norm for convergence
+			if (norm(grad) < epsilon) {
+				Xopt.flag = 1;
+				break;
+			}
+			
+			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
+				Xopt.flag = 0;
+				break;
+			}
+			
+			// Direction is negative gradient
+			matrix d = -grad;
+			
+			// If h0 > 0, use fixed step size
+			// If h0 == 0, use line search (golden section)
+			double step_size;
+			if (h0 > 0) {
+				step_size = h0;
+			} else {
+				// Use existing golden function for line search
+				g_ff_line_search = ff;
+				g_x_base_line_search = XB.x;
+				g_direction_line_search = d;
+				g_ud1_line_search = ud1;
+				g_ud2_line_search = ud2;
+				
+				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
+				step_size = m2d(alpha_opt.x);
+			}
+			
+			// Update position
+			Xopt.x = XB.x + step_size * d;
+			Xopt.fit_fun(ff, ud1, ud2);
+			
+			// Update best solution
+			XB = Xopt;
+			
+			iteration++;
+		}
+		
 		return Xopt;
 	}
 	catch (string ex_info)
@@ -744,8 +809,72 @@ solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, mat
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
-
+		Xopt.x = x0;
+		Xopt.fit_fun(ff, ud1, ud2);
+		
+		solution XB = Xopt;
+		matrix grad = XB.grad(gf, ud1, ud2);
+		matrix d = -grad; // Initial direction
+		matrix grad_prev;
+		
+		int iteration = 0;
+		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
+		
+		while (true) {
+			// Check gradient norm for convergence
+			if (norm(grad) < epsilon) {
+				Xopt.flag = 1;
+				break;
+			}
+			
+			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
+				Xopt.flag = 0;
+				break;
+			}
+			
+			// If h0 > 0, use fixed step size
+			// If h0 == 0, use line search (golden section)
+			double step_size;
+			if (h0 > 0) {
+				step_size = h0;
+			} else {
+				// Use existing golden function for line search
+				g_ff_line_search = ff;
+				g_x_base_line_search = XB.x;
+				g_direction_line_search = d;
+				g_ud1_line_search = ud1;
+				g_ud2_line_search = ud2;
+				
+				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
+				step_size = m2d(alpha_opt.x);
+			}
+			
+			// Update position
+			Xopt.x = XB.x + step_size * d;
+			Xopt.fit_fun(ff, ud1, ud2);
+			
+			// Compute new gradient using solution class method
+			grad_prev = grad;
+			grad = Xopt.grad(gf, ud1, ud2);
+			
+			// Fletcher-Reeves formula: beta = ||grad_new||^2 / ||grad_old||^2
+			double grad_norm_sq = norm(grad) * norm(grad);
+			double grad_prev_norm_sq = norm(grad_prev) * norm(grad_prev);
+			
+			double beta = 0.0;
+			if (grad_prev_norm_sq > 1e-15) {
+				beta = grad_norm_sq / grad_prev_norm_sq;
+			}
+			
+			// Update direction: d = -grad + beta * d_prev
+			d = -grad + beta * d;
+			
+			// Update best solution
+			XB = Xopt;
+			
+			iteration++;
+		}
+		
 		return Xopt;
 	}
 	catch (string ex_info)
@@ -760,8 +889,63 @@ solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix,
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
-
+		Xopt.x = x0;
+		Xopt.fit_fun(ff, ud1, ud2);
+		
+		solution XB = Xopt;
+		
+		int iteration = 0;
+		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
+		
+		while (true) {
+			// Compute gradient using solution class method
+			matrix grad = XB.grad(gf, ud1, ud2);
+			
+			// Check gradient norm for convergence
+			if (norm(grad) < epsilon) {
+				Xopt.flag = 1;
+				break;
+			}
+			
+			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
+				Xopt.flag = 0;
+				break;
+			}
+			
+			// Compute Hessian using solution class method
+			matrix H = XB.hess(Hf, ud1, ud2);
+			
+			// Newton direction: d = -H^{-1} * grad
+			matrix H_inv = inv(H);
+			matrix d = -(H_inv * grad);
+			
+			// If h0 > 0, use fixed step size
+			// If h0 == 0, use line search (golden section)
+			double step_size;
+			if (h0 > 0) {
+				step_size = h0;
+			} else {
+				// Use existing golden function for line search
+				g_ff_line_search = ff;
+				g_x_base_line_search = XB.x;
+				g_direction_line_search = d;
+				g_ud1_line_search = ud1;
+				g_ud2_line_search = ud2;
+				
+				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
+				step_size = m2d(alpha_opt.x);
+			}
+			
+			// Update position
+			Xopt.x = XB.x + step_size * d;
+			Xopt.fit_fun(ff, ud1, ud2);
+			
+			// Update best solution
+			XB = Xopt;
+			
+			iteration++;
+		}
+		
 		return Xopt;
 	}
 	catch (string ex_info)
@@ -775,8 +959,47 @@ solution golden(matrix(*ff)(matrix, matrix, matrix), double a, double b, double 
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
-
+		
+		double alpha = (sqrt(5.0) - 1.0) / 2.0; // golden ratio constant
+		
+		double c = b - alpha * (b - a);
+		double d = a + alpha * (b - a);
+		
+		solution fc(c);
+		solution fd(d);
+		fc.fit_fun(ff, ud1, ud2);
+		fd.fit_fun(ff, ud1, ud2);
+		
+		while (true) {
+			if (solution::f_calls > Nmax) {
+				Xopt.flag = 0;
+				break;
+			}
+			
+			if (b - a < epsilon) {
+				Xopt.x = (a + b) / 2.0;
+				Xopt.fit_fun(ff, ud1, ud2);
+				Xopt.flag = 1;
+				break;
+			}
+			
+			if (fc.y < fd.y) {
+				b = d;
+				d = c;
+				fd = fc;
+				c = b - alpha * (b - a);
+				fc.x = c;
+				fc.fit_fun(ff, ud1, ud2);
+			} else {
+				a = c;
+				c = d;
+				fc = fd;
+				d = a + alpha * (b - a);
+				fd.x = d;
+				fd.fit_fun(ff, ud1, ud2);
+			}
+		}
+		
 		return Xopt;
 	}
 	catch (string ex_info)
