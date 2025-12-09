@@ -646,6 +646,104 @@ void lab4()
 	cout << "  - table1_lab4.csv (test function experiments)" << endl;
 	cout << "  - table2_lab4.csv (logistic regression results)" << endl;
 	cout << "  - decision_boundary_lab4.csv (decision boundary data)" << endl;
+	
+	// ============================================================
+	// PART 3: GENERATE ITERATION HISTORY FOR CONTOUR PLOTS
+	// ============================================================
+	cout << "\n=== GENERATING ITERATION HISTORY FOR CONTOUR PLOTS ===" << endl;
+	
+	// Use the first starting point for consistency across all methods
+	matrix x0_plot = starting_points[0];
+	cout << "Using starting point: x0 = [" << x0_plot(0) << ", " << x0_plot(1) << "]" << endl;
+	
+	// Helper function to save history to CSV
+	auto save_history = [](const std::vector<matrix>& history, const string& filename) {
+		ofstream file(filename);
+		file << "iteration,x1,x2" << endl;
+		for (size_t i = 0; i < history.size(); i++) {
+			file << i << "," << history[i](0) << "," << history[i](1) << endl;
+		}
+		file.close();
+		cout << "  Saved: " << filename << " (" << history.size() << " iterations)" << endl;
+	};
+	
+	// Steepest Descent with different step sizes
+	{
+		// SD with h = 0.05
+		std::vector<matrix> history;
+		solution::clear_calls();
+		solution opt = SD(ff4T, gf4T, x0_plot, 0.05, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_SD_0.05.csv");
+		
+		// SD with h = 0.25
+		history.clear();
+		solution::clear_calls();
+		opt = SD(ff4T, gf4T, x0_plot, 0.25, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_SD_0.25.csv");
+		
+		// SD with variable step (line search)
+		history.clear();
+		solution::clear_calls();
+		opt = SD(ff4T, gf4T, x0_plot, 0.0, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_SD_variable.csv");
+	}
+	
+	// Conjugate Gradients with different step sizes
+	{
+		// CG with h = 0.05
+		std::vector<matrix> history;
+		solution::clear_calls();
+		solution opt = CG(ff4T, gf4T, x0_plot, 0.05, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_CG_0.05.csv");
+		
+		// CG with h = 0.25
+		history.clear();
+		solution::clear_calls();
+		opt = CG(ff4T, gf4T, x0_plot, 0.25, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_CG_0.25.csv");
+		
+		// CG with variable step (line search)
+		history.clear();
+		solution::clear_calls();
+		opt = CG(ff4T, gf4T, x0_plot, 0.0, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_CG_variable.csv");
+	}
+	
+	// Newton's method with different step sizes
+	{
+		// Newton with h = 0.05 (for plot 1)
+		std::vector<matrix> history;
+		solution::clear_calls();
+		solution opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.05, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_Newton_0.05.csv");
+		
+		// Newton with h = 0.25 (for plot 2)
+		history.clear();
+		solution::clear_calls();
+		opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.25, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_Newton_0.25.csv");
+		
+		// Newton with h = 0.01 (for plot 6)
+		history.clear();
+		solution::clear_calls();
+		opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.01, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_Newton_0.01.csv");
+		
+		// Newton with h = 0.0001 (for plot 6)
+		history.clear();
+		solution::clear_calls();
+		opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.0001, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_Newton_0.0001.csv");
+		
+		// Newton with variable step (line search)
+		history.clear();
+		solution::clear_calls();
+		opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.0, epsilon, Nmax, NAN, NAN, &history);
+		save_history(history, "history_Newton_variable.csv");
+	}
+	
+	cout << "\nAll history files generated successfully!" << endl;
+	cout << "Run 'python3 plot_contours.py' to generate contour plots." << endl;
 }
 
 void lab5()
