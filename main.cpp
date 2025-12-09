@@ -672,19 +672,19 @@ void lab4()
 		// SD with h = 0.05
 		std::vector<matrix> history;
 		solution::clear_calls();
-		solution opt = SD(ff4T, gf4T, x0_plot, 0.05, epsilon, Nmax, NAN, NAN, &history);
+		SD(ff4T, gf4T, x0_plot, 0.05, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_SD_0.05.csv");
 		
 		// SD with h = 0.25
 		history.clear();
 		solution::clear_calls();
-		opt = SD(ff4T, gf4T, x0_plot, 0.25, epsilon, Nmax, NAN, NAN, &history);
+		SD(ff4T, gf4T, x0_plot, 0.25, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_SD_0.25.csv");
 		
 		// SD with variable step (line search)
 		history.clear();
 		solution::clear_calls();
-		opt = SD(ff4T, gf4T, x0_plot, 0.0, epsilon, Nmax, NAN, NAN, &history);
+		SD(ff4T, gf4T, x0_plot, 0.0, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_SD_variable.csv");
 	}
 	
@@ -693,19 +693,19 @@ void lab4()
 		// CG with h = 0.05
 		std::vector<matrix> history;
 		solution::clear_calls();
-		solution opt = CG(ff4T, gf4T, x0_plot, 0.05, epsilon, Nmax, NAN, NAN, &history);
+		CG(ff4T, gf4T, x0_plot, 0.05, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_CG_0.05.csv");
 		
 		// CG with h = 0.25
 		history.clear();
 		solution::clear_calls();
-		opt = CG(ff4T, gf4T, x0_plot, 0.25, epsilon, Nmax, NAN, NAN, &history);
+		CG(ff4T, gf4T, x0_plot, 0.25, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_CG_0.25.csv");
 		
 		// CG with variable step (line search)
 		history.clear();
 		solution::clear_calls();
-		opt = CG(ff4T, gf4T, x0_plot, 0.0, epsilon, Nmax, NAN, NAN, &history);
+		CG(ff4T, gf4T, x0_plot, 0.0, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_CG_variable.csv");
 	}
 	
@@ -714,31 +714,31 @@ void lab4()
 		// Newton with h = 0.05 (for plot 1)
 		std::vector<matrix> history;
 		solution::clear_calls();
-		solution opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.05, epsilon, Nmax, NAN, NAN, &history);
+		Newton(ff4T, gf4T, Hf4T, x0_plot, 0.05, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_Newton_0.05.csv");
 		
 		// Newton with h = 0.25 (for plot 2)
 		history.clear();
 		solution::clear_calls();
-		opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.25, epsilon, Nmax, NAN, NAN, &history);
+		Newton(ff4T, gf4T, Hf4T, x0_plot, 0.25, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_Newton_0.25.csv");
 		
 		// Newton with h = 0.01 (for plot 6)
 		history.clear();
 		solution::clear_calls();
-		opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.01, epsilon, Nmax, NAN, NAN, &history);
+		Newton(ff4T, gf4T, Hf4T, x0_plot, 0.01, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_Newton_0.01.csv");
 		
 		// Newton with h = 0.0001 (for plot 6)
 		history.clear();
 		solution::clear_calls();
-		opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.0001, epsilon, Nmax, NAN, NAN, &history);
+		Newton(ff4T, gf4T, Hf4T, x0_plot, 0.0001, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_Newton_0.0001.csv");
 		
 		// Newton with variable step (line search)
 		history.clear();
 		solution::clear_calls();
-		opt = Newton(ff4T, gf4T, Hf4T, x0_plot, 0.0, epsilon, Nmax, NAN, NAN, &history);
+		Newton(ff4T, gf4T, Hf4T, x0_plot, 0.0, epsilon, Nmax, NAN, NAN, &history);
 		save_history(history, "history_Newton_variable.csv");
 	}
 	

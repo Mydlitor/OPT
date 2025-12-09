@@ -14,7 +14,7 @@ f(x1, x2) = (1/6)*x1^6 - 1.05*x1^4 + 2*x1^2 + x2^2 + x1*x2
 
 ### CSV History Files
 
-When you run the C++ program, it generates 9 CSV files containing iteration histories:
+When you run the C++ program, it generates 11 CSV files containing iteration histories:
 
 - `history_SD_0.05.csv` - Steepest Descent with step size 0.05
 - `history_SD_0.25.csv` - Steepest Descent with step size 0.25
@@ -22,6 +22,8 @@ When you run the C++ program, it generates 9 CSV files containing iteration hist
 - `history_CG_0.05.csv` - Conjugate Gradients with step size 0.05
 - `history_CG_0.25.csv` - Conjugate Gradients with step size 0.25
 - `history_CG_variable.csv` - Conjugate Gradients with line search (variable step)
+- `history_Newton_0.05.csv` - Newton's method with step size 0.05
+- `history_Newton_0.25.csv` - Newton's method with step size 0.25
 - `history_Newton_0.01.csv` - Newton's method with step size 0.01
 - `history_Newton_0.0001.csv` - Newton's method with step size 0.0001
 - `history_Newton_variable.csv` - Newton's method with line search (variable step)
