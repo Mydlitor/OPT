@@ -378,6 +378,16 @@ void lab4()
 	int Nmax = 10000;
 	int n_experiments = 100;
 	
+	// Generate one set of random starting points to be used by all methods
+	// This ensures fair comparison between methods
+	vector<matrix> starting_points;
+	for (int i = 0; i < n_experiments; i++) {
+		matrix x0(2, 1);
+		x0(0) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
+		x0(1) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
+		starting_points.push_back(x0);
+	}
+	
 	// Define step sizes for each method
 	double sd_steps[] = {0.05, 0.25};
 	double cg_steps[] = {0.05, 0.25};
@@ -394,10 +404,8 @@ void lab4()
 		int convergences = 0;
 		
 		for (int i = 0; i < n_experiments; i++) {
-			// Random start in [-2, 2] x [-2, 2]
-			matrix x0(2, 1);
-			x0(0) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
-			x0(1) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
+			// Use the same starting point for all methods
+			matrix x0 = starting_points[i];
 			
 			solution::clear_calls();
 			solution opt = SD(ff4T, gf4T, x0, step, epsilon, Nmax);
@@ -422,9 +430,8 @@ void lab4()
 		int convergences = 0;
 		
 		for (int i = 0; i < n_experiments; i++) {
-			matrix x0(2, 1);
-			x0(0) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
-			x0(1) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
+			// Use the same starting point for all methods
+			matrix x0 = starting_points[i];
 			
 			solution::clear_calls();
 			solution opt = CG(ff4T, gf4T, x0, step, epsilon, Nmax);
@@ -449,9 +456,8 @@ void lab4()
 		int convergences = 0;
 		
 		for (int i = 0; i < n_experiments; i++) {
-			matrix x0(2, 1);
-			x0(0) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
-			x0(1) = (rand() / (double)RAND_MAX) * 4.0 - 2.0;
+			// Use the same starting point for all methods
+			matrix x0 = starting_points[i];
 			
 			solution::clear_calls();
 			solution opt = Newton(ff4T, gf4T, Hf4T, x0, step, epsilon, Nmax);
