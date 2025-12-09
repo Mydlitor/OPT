@@ -75,7 +75,8 @@ void lab1(int aN)
 {
 #pragma region zadanie
 	// DANE
-	aN = std::clamp(aN, 0, 2); // wybor alpha
+	if (aN < 0) aN = 0; // wybor alpha
+	if (aN > 2) aN = 2;
 	solution opt;
 	int Nmax = 1000;
 	matrix cel = matrix(50.0);
