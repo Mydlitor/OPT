@@ -490,8 +490,8 @@ matrix ff5T(matrix x, matrix ud1, matrix ud2) {
 // ud1(0) = weight w
 // Returns weighted objective with penalties for constraint violations
 matrix ff5R(matrix x, matrix ud1, matrix ud2) {
-    double d = m2d(x(0));  // diameter in mm
-    double l = m2d(x(1));  // length in mm
+    double d_orig = m2d(x(0));  // diameter in mm
+    double l_orig = m2d(x(1));  // length in mm
     double w = m2d(ud1(0)); // weight
     
     // Constants
@@ -501,25 +501,29 @@ matrix ff5R(matrix x, matrix ud1, matrix ud2) {
     const double u_max = 2.5;       // max deflection in mm
     const double sigma_max = 300e6; // max stress in Pa (300 MPa)
     
-    const double penalty_coef = 1e10;
+    const double penalty_coef = 1e5;  // Reduced from 1e10 to avoid overflow
     
     // Penalty for bounds: d in [0.01, 1000], l in [0.2, 1000]
     double f = 0.0;
     
-    if (d < 0.01) {
-        f += penalty_coef * pow(0.01 - d, 2);
+    // Apply penalties for out-of-bounds, but clamp for calculation
+    double d = d_orig;
+    double l = l_orig;
+    
+    if (d_orig < 0.01) {
+        f += penalty_coef * pow(0.01 - d_orig, 2);
         d = 0.01;
     }
-    if (d > 1000.0) {
-        f += penalty_coef * pow(d - 1000.0, 2);
+    if (d_orig > 1000.0) {
+        f += penalty_coef * pow(d_orig - 1000.0, 2);
         d = 1000.0;
     }
-    if (l < 0.2) {
-        f += penalty_coef * pow(0.2 - l, 2);
+    if (l_orig < 0.2) {
+        f += penalty_coef * pow(0.2 - l_orig, 2);
         l = 0.2;
     }
-    if (l > 1000.0) {
-        f += penalty_coef * pow(l - 1000.0, 2);
+    if (l_orig > 1000.0) {
+        f += penalty_coef * pow(l_orig - 1000.0, 2);
         l = 1000.0;
     }
     
@@ -545,7 +549,7 @@ matrix ff5R(matrix x, matrix ud1, matrix ud2) {
     f += w * f1 + (1.0 - w) * f2;
     
     // Add penalties for constraint violations
-    const double constraint_penalty = 1e6;
+    const double constraint_penalty = 1e4;  // Reduced from 1e6
     
     // Penalty for deflection constraint: u <= u_max
     if (u > u_max) {

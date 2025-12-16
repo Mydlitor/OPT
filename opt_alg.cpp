@@ -1292,7 +1292,8 @@ solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, 
 				g_ud2_line_search = ud2;
 				
 				// Find optimal step size h_j using golden section search
-				solution h_opt = golden(line_search_objective, -100.0, 100.0, 1e-6, Nmax, ud1, ud2);
+				// Use adaptive search interval based on problem scale
+				solution h_opt = golden(line_search_objective, -10.0, 10.0, 1e-6, Nmax, ud1, ud2);
 				
 				// Update position
 				p[j + 1] = p[j] + m2d(h_opt.x) * D[j];
@@ -1338,7 +1339,7 @@ solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, 
 			g_ud1_line_search = ud1;
 			g_ud2_line_search = ud2;
 			
-			solution h_opt_final = golden(line_search_objective, -100.0, 100.0, 1e-6, Nmax, ud1, ud2);
+			solution h_opt_final = golden(line_search_objective, -10.0, 10.0, 1e-6, Nmax, ud1, ud2);
 			
 			// Update current point
 			x = pn + m2d(h_opt_final.x) * D[n - 1];
@@ -1356,9 +1357,6 @@ solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, 
 			
 			i++;
 		}
-		
-		delete[] D;
-		return Xopt;
 	}
 	catch (string ex_info)
 	{

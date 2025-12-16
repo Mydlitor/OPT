@@ -786,6 +786,9 @@ void lab5()
 	cout << "=== LAB5: MULTI-CRITERIA OPTIMIZATION ===" << endl;
 	cout << "=== PART 1: TEST PROBLEM ===" << endl;
 	
+	// Set random seed for reproducibility (can be changed to time(NULL) for true randomness)
+	srand(42);
+	
 	double epsilon = 1e-3;
 	int Nmax = 10000;
 	
