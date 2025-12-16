@@ -21,3 +21,9 @@ matrix gf4T(matrix, matrix = NAN, matrix = NAN);
 matrix Hf4T(matrix, matrix = NAN, matrix = NAN);
 matrix ff4R_cost(matrix, matrix = NAN, matrix = NAN);
 matrix gf4R_grad(matrix, matrix = NAN, matrix = NAN);
+
+// Lab 5 - Multi-criteria optimization
+matrix ff5_f1(matrix, matrix = NAN, matrix = NAN);
+matrix ff5_f2(matrix, matrix = NAN, matrix = NAN);
+matrix ff5T(matrix, matrix = NAN, matrix = NAN);
+matrix ff5R(matrix, matrix = NAN, matrix = NAN);
