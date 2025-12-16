@@ -376,9 +376,11 @@ test_beam
 test_beam2
 test_beam3
 test_lab5_small
+quick_test_lab5
 
 # Test files
 test_*.cpp
+quick_test_*.cpp
 
 # Generated output files from lab4
 history_*.csv
