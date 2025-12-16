@@ -443,3 +443,119 @@ matrix gf4R_grad(matrix theta, matrix ud1, matrix ud2) {
     
     return grad;
 }
+
+// ====== LAB 5 FUNCTIONS ======
+
+// First criterion for test problem: f1(x) = a*((x1-3)^2 + (x2-3)^2)
+// ud1(0) = parameter a
+matrix ff5_f1(matrix x, matrix ud1, matrix ud2) {
+    double x1 = m2d(x(0));
+    double x2 = m2d(x(1));
+    double a = m2d(ud1(0));
+    
+    double f1 = a * (pow(x1 - 3.0, 2) + pow(x2 - 3.0, 2));
+    
+    return matrix(f1);
+}
+
+// Second criterion for test problem: f2(x) = (1/a)*((x1+3)^2 + (x2+3)^2)
+// ud1(0) = parameter a
+matrix ff5_f2(matrix x, matrix ud1, matrix ud2) {
+    double x1 = m2d(x(0));
+    double x2 = m2d(x(1));
+    double a = m2d(ud1(0));
+    
+    double f2 = (1.0 / a) * (pow(x1 + 3.0, 2) + pow(x2 + 3.0, 2));
+    
+    return matrix(f2);
+}
+
+// Weighted objective for test problem: f(x) = w*f1(x) + (1-w)*f2(x)
+// ud1(0) = parameter a
+// ud1(1) = weight w
+matrix ff5T(matrix x, matrix ud1, matrix ud2) {
+    double w = m2d(ud1(1));
+    
+    matrix f1 = ff5_f1(x, ud1, ud2);
+    matrix f2 = ff5_f2(x, ud1, ud2);
+    
+    double f = w * m2d(f1) + (1.0 - w) * m2d(f2);
+    
+    return matrix(f);
+}
+
+// Weighted objective for real problem: cantilever beam
+// x(0) = diameter d [mm]
+// x(1) = length l [mm]
+// ud1(0) = weight w
+// Returns weighted objective with penalties for constraint violations
+matrix ff5R(matrix x, matrix ud1, matrix ud2) {
+    double d = m2d(x(0));  // diameter in mm
+    double l = m2d(x(1));  // length in mm
+    double w = m2d(ud1(0)); // weight
+    
+    // Constants
+    const double P = 3000.0;        // force in N (3 kN)
+    const double E = 120e9;         // Young's modulus in Pa (120 GPa)
+    const double rho = 8920.0;      // density in kg/m^3
+    const double u_max = 2.5;       // max deflection in mm
+    const double sigma_max = 300e6; // max stress in Pa (300 MPa)
+    
+    const double penalty_coef = 1e10;
+    
+    // Penalty for bounds: d in [0.01, 1000], l in [0.2, 1000]
+    double f = 0.0;
+    
+    if (d < 0.01) {
+        f += penalty_coef * pow(0.01 - d, 2);
+        d = 0.01;
+    }
+    if (d > 1000.0) {
+        f += penalty_coef * pow(d - 1000.0, 2);
+        d = 1000.0;
+    }
+    if (l < 0.2) {
+        f += penalty_coef * pow(0.2 - l, 2);
+        l = 0.2;
+    }
+    if (l > 1000.0) {
+        f += penalty_coef * pow(l - 1000.0, 2);
+        l = 1000.0;
+    }
+    
+    // Convert to SI units (meters)
+    double d_m = d / 1000.0;
+    double l_m = l / 1000.0;
+    
+    // Calculate mass (kg)
+    double mass = rho * M_PI * pow(d_m / 2.0, 2) * l_m;
+    
+    // Calculate deflection (convert to mm)
+    double u = (64.0 * P * pow(l_m, 3)) / (3.0 * E * M_PI * pow(d_m, 4));
+    u = u * 1000.0;  // convert to mm
+    
+    // Calculate stress (Pa)
+    double sigma = (32.0 * P * l_m) / (M_PI * pow(d_m, 3));
+    
+    // Criteria
+    double f1 = mass;       // minimize mass
+    double f2 = u;          // minimize deflection
+    
+    // Weighted objective
+    f += w * f1 + (1.0 - w) * f2;
+    
+    // Add penalties for constraint violations
+    const double constraint_penalty = 1e6;
+    
+    // Penalty for deflection constraint: u <= u_max
+    if (u > u_max) {
+        f += constraint_penalty * pow(u - u_max, 2);
+    }
+    
+    // Penalty for stress constraint: sigma <= sigma_max
+    if (sigma > sigma_max) {
+        f += constraint_penalty * pow((sigma - sigma_max) / 1e6, 2);  // normalize to MPa scale
+    }
+    
+    return matrix(f);
+}

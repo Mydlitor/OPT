@@ -1262,8 +1262,102 @@ solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, 
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
-
+		
+		int n = get_len(x0);  // dimension of the problem
+		
+		// Initialize direction vectors as unit vectors (identity matrix columns)
+		matrix* D = new matrix[n];
+		for (int j = 0; j < n; j++) {
+			D[j] = matrix(n, 1, 0.0);
+			D[j](j) = 1.0;  // j-th unit vector
+		}
+		
+		matrix x = x0;  // current point
+		int i = 0;      // iteration counter
+		
+		while (true) {
+			matrix p0 = x;  // store starting point of iteration
+			
+			// Array to store intermediate points
+			matrix* p = new matrix[n + 1];
+			p[0] = p0;
+			
+			// Phase 1: Optimize along each direction
+			for (int j = 0; j < n; j++) {
+				// Setup line search objective: minimize f(x_base + h * d_j)
+				g_ff_line_search = ff;
+				g_x_base_line_search = p[j];
+				g_direction_line_search = D[j];
+				g_ud1_line_search = ud1;
+				g_ud2_line_search = ud2;
+				
+				// Find optimal step size h_j using golden section search
+				solution h_opt = golden(line_search_objective, -100.0, 100.0, 1e-6, Nmax, ud1, ud2);
+				
+				// Update position
+				p[j + 1] = p[j] + m2d(h_opt.x) * D[j];
+				
+				// Check if Nmax exceeded
+				if (solution::f_calls > Nmax) {
+					delete[] p;
+					delete[] D;
+					Xopt.x = x;
+					Xopt.fit_fun(ff, ud1, ud2);
+					Xopt.flag = 0;
+					return Xopt;
+				}
+			}
+			
+			matrix pn = p[n];  // final point after n line searches
+			
+			// Check convergence: ||p_n - p_0|| < epsilon
+			double dist = norm(pn - p0);
+			
+			if (dist < epsilon) {
+				delete[] p;
+				delete[] D;
+				Xopt.x = pn;
+				Xopt.fit_fun(ff, ud1, ud2);
+				Xopt.flag = 1;
+				return Xopt;
+			}
+			
+			// Phase 2: Update direction vectors
+			// Shift directions: d_j^(i+1) = d_(j+1)^(i) for j = 0..n-2
+			for (int j = 0; j < n - 1; j++) {
+				D[j] = D[j + 1];
+			}
+			
+			// New direction: d_n^(i+1) = p_n - p_0
+			D[n - 1] = pn - p0;
+			
+			// Optimize along the new direction
+			g_ff_line_search = ff;
+			g_x_base_line_search = pn;
+			g_direction_line_search = D[n - 1];
+			g_ud1_line_search = ud1;
+			g_ud2_line_search = ud2;
+			
+			solution h_opt_final = golden(line_search_objective, -100.0, 100.0, 1e-6, Nmax, ud1, ud2);
+			
+			// Update current point
+			x = pn + m2d(h_opt_final.x) * D[n - 1];
+			
+			delete[] p;
+			
+			// Check if Nmax exceeded
+			if (solution::f_calls > Nmax) {
+				delete[] D;
+				Xopt.x = x;
+				Xopt.fit_fun(ff, ud1, ud2);
+				Xopt.flag = 0;
+				return Xopt;
+			}
+			
+			i++;
+		}
+		
+		delete[] D;
 		return Xopt;
 	}
 	catch (string ex_info)
