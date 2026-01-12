@@ -891,10 +891,16 @@ void lab5()
 	for (int w_idx = 0; w_idx <= 100; w_idx++) {
 		double w = w_idx / 100.0;
 		
-		// Random starting point: d in [10, 50], l in [200, 1000]
+		// Random starting point: d in [d_min, d_max], l in [l_min, l_max]
+		// Bounds from K5.pdf: d in [10, 50] mm, l in [200, 1000] mm
+		const double d_min = 10.0;
+		const double d_max = 50.0;
+		const double l_min = 200.0;
+		const double l_max = 1000.0;
+		
 		matrix x0(2, 1);
-		x0(0) = (rand() / (double)RAND_MAX) * 40.0 + 10.0;   // d
-		x0(1) = (rand() / (double)RAND_MAX) * 800.0 + 200.0;     // l
+		x0(0) = (rand() / (double)RAND_MAX) * (d_max - d_min) + d_min;   // d
+		x0(1) = (rand() / (double)RAND_MAX) * (l_max - l_min) + l_min;   // l
 		
 		// Setup parameters: ud1(0) = w
 		matrix params(1, 1);

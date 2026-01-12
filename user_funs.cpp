@@ -501,30 +501,37 @@ matrix ff5R(matrix x, matrix ud1, matrix ud2) {
     const double u_max = 2.5;       // max deflection in mm
     const double sigma_max = 300e6; // max stress in Pa (300 MPa)
     
-    const double penalty_coef = 1e6;  // External penalty coefficient
+    // Bounds from K5.pdf
+    const double d_min = 10.0;      // min diameter in mm
+    const double d_max = 50.0;      // max diameter in mm
+    const double l_min = 200.0;     // min length in mm
+    const double l_max = 1000.0;    // max length in mm
     
-    // Penalty for bounds: d in [10, 50], l in [200, 1000] per K5.pdf
+    // External penalty coefficient
+    const double penalty_coef = 1e6;
+    
+    // Penalty for bounds violations
     double f = 0.0;
     
     // Apply penalties for out-of-bounds, but clamp for calculation
     double d = d_orig;
     double l = l_orig;
     
-    if (d_orig < 10.0) {
-        f += penalty_coef * pow(10.0 - d_orig, 2);
-        d = 10.0;
+    if (d_orig < d_min) {
+        f += penalty_coef * pow(d_min - d_orig, 2);
+        d = d_min;
     }
-    if (d_orig > 50.0) {
-        f += penalty_coef * pow(d_orig - 50.0, 2);
-        d = 50.0;
+    if (d_orig > d_max) {
+        f += penalty_coef * pow(d_orig - d_max, 2);
+        d = d_max;
     }
-    if (l_orig < 200.0) {
-        f += penalty_coef * pow(200.0 - l_orig, 2);
-        l = 200.0;
+    if (l_orig < l_min) {
+        f += penalty_coef * pow(l_min - l_orig, 2);
+        l = l_min;
     }
-    if (l_orig > 1000.0) {
-        f += penalty_coef * pow(l_orig - 1000.0, 2);
-        l = 1000.0;
+    if (l_orig > l_max) {
+        f += penalty_coef * pow(l_orig - l_max, 2);
+        l = l_max;
     }
     
     // Convert to SI units (meters)
@@ -549,16 +556,14 @@ matrix ff5R(matrix x, matrix ud1, matrix ud2) {
     f += w * f1 + (1.0 - w) * f2;
     
     // Add penalties for constraint violations (external penalty method)
-    const double constraint_penalty = 1e6;  // External penalty coefficient
-    
     // Penalty for deflection constraint: u <= u_max
     if (u > u_max) {
-        f += constraint_penalty * pow(u - u_max, 2);
+        f += penalty_coef * pow(u - u_max, 2);
     }
     
     // Penalty for stress constraint: sigma <= sigma_max
     if (sigma > sigma_max) {
-        f += constraint_penalty * pow((sigma - sigma_max) / 1e6, 2);  // normalize to MPa scale
+        f += penalty_coef * pow((sigma - sigma_max) / 1e6, 2);  // normalize to MPa scale
     }
     
     return matrix(f);
