@@ -793,10 +793,9 @@ void lab5()
 	// Parameter values for a
 	double a_values[] = {1.0, 10.0, 100.0};
 	
-	// Create TABLE 1 - Combined output file for all test functions
-	ofstream table1("lab5_table1.csv");
-	table1 << "a,w,x1_start,x2_start,x1_opt,x2_opt,f1_opt,f2_opt,f_opt,f_calls" << endl;
-	table1.precision(10);
+	// Store results in memory first, then write in desired order
+	// results[a_idx][w_idx] = {a, w, x1_start, x2_start, x1_opt, x2_opt, f1_opt, f2_opt, f_opt, f_calls}
+	vector<vector<vector<double>>> results(3, vector<vector<double>>(101));
 	
 	// 101 optimizations for w = 0.00, 0.01, 0.02, ..., 1.00
 	// For each w, use the SAME starting point for all values of a
@@ -825,17 +824,30 @@ void lab5()
 			matrix f1_opt = ff5_f1(opt.x, params, NAN);
 			matrix f2_opt = ff5_f2(opt.x, params, NAN);
 			
-			// Write results to TABLE 1
-			table1 << a << "," << w << ","
-			       << x0(0) << "," << x0(1) << ","
-			       << opt.x(0) << "," << opt.x(1) << ","
-			       << f1_opt(0) << "," << f2_opt(0) << ","
-			       << opt.y(0) << "," << solution::f_calls << endl;
+			// Store results in memory
+			results[a_idx][w_idx] = {a, w, x0(0), x0(1), opt.x(0), opt.x(1), 
+			                          m2d(f1_opt), m2d(f2_opt), m2d(opt.y), (double)solution::f_calls};
 			
 			// Print progress every 10 iterations for a=1
 			if (w_idx % 10 == 0 && a_idx == 0) {
 				cout << "  w=" << w << ": x_start=[" << x0(0) << "," << x0(1) << "]" << endl;
 			}
+		}
+	}
+	
+	// Now write results to file in order: all a=1, then all a=10, then all a=100
+	ofstream table1("lab5_table1.csv");
+	table1 << "a,w,x1_start,x2_start,x1_opt,x2_opt,f1_opt,f2_opt,f_opt,f_calls" << endl;
+	table1.precision(10);
+	
+	for (int a_idx = 0; a_idx < 3; a_idx++) {
+		for (int w_idx = 0; w_idx <= 100; w_idx++) {
+			const auto& row = results[a_idx][w_idx];
+			table1 << row[0] << "," << row[1] << ","
+			       << row[2] << "," << row[3] << ","
+			       << row[4] << "," << row[5] << ","
+			       << row[6] << "," << row[7] << ","
+			       << row[8] << "," << (int)row[9] << endl;
 		}
 	}
 	
