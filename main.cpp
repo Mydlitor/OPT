@@ -793,18 +793,16 @@ void lab5()
 	// Parameter values for a
 	double a_values[] = {1.0, 10.0, 100.0};
 	
+	// Create TABLE 1 - Combined output file for all test functions
+	ofstream table1("lab5_table1.csv");
+	table1 << "a,w,x1_start,x2_start,x1_opt,x2_opt,f1_opt,f2_opt,f_opt,f_calls" << endl;
+	table1.precision(10);
+	
 	// For each value of parameter a
 	for (int a_idx = 0; a_idx < 3; a_idx++) {
 		double a = a_values[a_idx];
 		
 		cout << "\n--- Testing with a = " << a << " ---" << endl;
-		
-		// Create output file
-		stringstream filename;
-		filename << "lab5_test_a" << (int)a << ".csv";
-		ofstream outfile(filename.str());
-		outfile << "w,x1_start,x2_start,x1_opt,x2_opt,f1_opt,f2_opt,f_opt,f_calls" << endl;
-		outfile.precision(10);
 		
 		// 101 optimizations for w = 0.00, 0.01, 0.02, ..., 1.00
 		for (int w_idx = 0; w_idx <= 100; w_idx++) {
@@ -828,12 +826,12 @@ void lab5()
 			matrix f1_opt = ff5_f1(opt.x, params, NAN);
 			matrix f2_opt = ff5_f2(opt.x, params, NAN);
 			
-			// Write results
-			outfile << w << ","
-			        << x0(0) << "," << x0(1) << ","
-			        << opt.x(0) << "," << opt.x(1) << ","
-			        << f1_opt(0) << "," << f2_opt(0) << ","
-			        << opt.y(0) << "," << solution::f_calls << endl;
+			// Write results to TABLE 1
+			table1 << a << "," << w << ","
+			       << x0(0) << "," << x0(1) << ","
+			       << opt.x(0) << "," << opt.x(1) << ","
+			       << f1_opt(0) << "," << f2_opt(0) << ","
+			       << opt.y(0) << "," << solution::f_calls << endl;
 			
 			// Print progress every 10 iterations
 			if (w_idx % 10 == 0) {
@@ -841,10 +839,10 @@ void lab5()
 				     << "], f1*=" << f1_opt(0) << ", f2*=" << f2_opt(0) << endl;
 			}
 		}
-		
-		outfile.close();
-		cout << "Results saved to " << filename.str() << endl;
 	}
+	
+	table1.close();
+	cout << "\nResults saved to lab5_table1.csv (303 rows: all test problems)" << endl;
 	
 	// ============================================================
 	// PART 2: REAL PROBLEM - CANTILEVER BEAM
@@ -880,10 +878,10 @@ void lab5()
 		else cout << "  Stress VIOLATED" << endl;
 	}
 	
-	// Create output file for beam optimization
-	ofstream beam_file("lab5_beam.csv");
-	beam_file << "w,d_start,l_start,d_opt,l_opt,mass,deflection,stress,f_opt,f_calls" << endl;
-	beam_file.precision(10);
+	// Create TABLE 2 - Output file for beam optimization (real problem)
+	ofstream table2("lab5_table2.csv");
+	table2 << "w,d_start,l_start,d_opt,l_opt,mass,deflection,stress,f_opt,f_calls" << endl;
+	table2.precision(10);
 	
 	cout << "\nRunning 101 optimizations for beam problem..." << endl;
 	
@@ -925,12 +923,12 @@ void lab5()
 		double u = (64.0 * P * pow(l_m, 3)) / (3.0 * E * M_PI * pow(d_m, 4)) * 1000.0;
 		double sigma = (32.0 * P * l_m) / (M_PI * pow(d_m, 3));
 		
-		// Write results
-		beam_file << w << ","
-		          << x0(0) << "," << x0(1) << ","
-		          << d << "," << l << ","
-		          << mass << "," << u << "," << sigma / 1e6 << ","
-		          << opt.y(0) << "," << solution::f_calls << endl;
+		// Write results to TABLE 2
+		table2 << w << ","
+		       << x0(0) << "," << x0(1) << ","
+		       << d << "," << l << ","
+		       << mass << "," << u << "," << sigma / 1e6 << ","
+		       << opt.y(0) << "," << solution::f_calls << endl;
 		
 		// Print progress every 10 iterations
 		if (w_idx % 10 == 0) {
@@ -940,15 +938,13 @@ void lab5()
 		}
 	}
 	
-	beam_file.close();
-	cout << "\nResults saved to lab5_beam.csv" << endl;
+	table2.close();
+	cout << "\nResults saved to lab5_table2.csv (101 rows: beam problem)" << endl;
 	
 	cout << "\n=== LAB5 COMPLETED ===" << endl;
 	cout << "Generated files:" << endl;
-	cout << "  - lab5_test_a1.csv (test problem with a=1)" << endl;
-	cout << "  - lab5_test_a10.csv (test problem with a=10)" << endl;
-	cout << "  - lab5_test_a100.csv (test problem with a=100)" << endl;
-	cout << "  - lab5_beam.csv (cantilever beam problem)" << endl;
+	cout << "  - lab5_table1.csv (Table 1: test problems for a=1,10,100)" << endl;
+	cout << "  - lab5_table2.csv (Table 2: cantilever beam problem)" << endl;
 }
 
 void lab6()
