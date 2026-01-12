@@ -371,6 +371,16 @@ out
 # Linux executable
 OPT
 opt_program
+test_powell
+test_beam
+test_beam2
+test_beam3
+test_lab5_small
+quick_test_lab5
+
+# Test files
+test_*.cpp
+quick_test_*.cpp
 
 # Generated output files from lab4
 history_*.csv
@@ -379,3 +389,5 @@ table*_lab4.csv
 decision_boundary_lab4.csv
 symulacja_*.csv
 
+# Generated output files from lab5 (keep the final results)
+# lab5_*.csv are the actual results, so don't ignore them
