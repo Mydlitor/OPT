@@ -852,27 +852,27 @@ void lab5()
 	cout << "\n=== PART 2: REAL PROBLEM - CANTILEVER BEAM ===" << endl;
 	
 	// Validation test - verify formulas work
-	cout << "\nValidation test (l=500mm, d=30mm):" << endl;
+	cout << "\nValidation test (l=500mm, d=25mm):" << endl;
 	{
 		matrix x_test(2, 1);
-		x_test(0) = 30.0;   // d = 30 mm
+		x_test(0) = 25.0;   // d = 25 mm
 		x_test(1) = 500.0;  // l = 500 mm
 		
 		// Constants for validation
-		const double P = 3000.0;
+		const double P = 2000.0;
 		const double E = 120e9;
 		const double rho = 8920.0;
 		
-		double d_m = 30.0 / 1000.0;
+		double d_m = 25.0 / 1000.0;
 		double l_m = 500.0 / 1000.0;
 		
 		double mass = rho * M_PI * pow(d_m / 2.0, 2) * l_m;
 		double u = (64.0 * P * pow(l_m, 3)) / (3.0 * E * M_PI * pow(d_m, 4)) * 1000.0;
 		double sigma = (32.0 * P * l_m) / (M_PI * pow(d_m, 3));
 		
-		cout << "  m = " << mass << " kg" << endl;
-		cout << "  u = " << u << " mm" << endl;
-		cout << "  sigma = " << sigma / 1e6 << " MPa" << endl;
+		cout << "  m = " << mass << " kg (expected ~2.19 kg)" << endl;
+		cout << "  u = " << u << " mm (expected ~36.22 mm)" << endl;
+		cout << "  sigma = " << sigma / 1e6 << " MPa (expected ~651.9 MPa)" << endl;
 		cout << "  Constraints: u_max=2.5mm, sigma_max=300MPa" << endl;
 		if (u <= 2.5) cout << "  Deflection OK" << endl;
 		else cout << "  Deflection VIOLATED" << endl;
@@ -891,10 +891,10 @@ void lab5()
 	for (int w_idx = 0; w_idx <= 100; w_idx++) {
 		double w = w_idx / 100.0;
 		
-		// Random starting point: d in [0.01, 1000], l in [0.2, 1000]
+		// Random starting point: d in [10, 50], l in [200, 1000]
 		matrix x0(2, 1);
-		x0(0) = (rand() / (double)RAND_MAX) * 999.99 + 0.01;   // d
-		x0(1) = (rand() / (double)RAND_MAX) * 999.8 + 0.2;     // l
+		x0(0) = (rand() / (double)RAND_MAX) * 40.0 + 10.0;   // d
+		x0(1) = (rand() / (double)RAND_MAX) * 800.0 + 200.0;     // l
 		
 		// Setup parameters: ud1(0) = w
 		matrix params(1, 1);
@@ -908,7 +908,7 @@ void lab5()
 		double d = m2d(opt.x(0));
 		double l = m2d(opt.x(1));
 		
-		const double P = 3000.0;
+		const double P = 2000.0;  // 2 kN from K5.pdf
 		const double E = 120e9;
 		const double rho = 8920.0;
 		
