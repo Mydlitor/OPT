@@ -22,11 +22,9 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		// Current lab: Lab4 - Gradient-based optimization
+		// Current lab: Lab5 - Multi-criteria optimization
 		// Change this line to switch between different labs
-		// To run lab5: uncomment the line below and comment out lab4()
-		// lab5();
-		lab4();
+		lab5();
 	}
 	catch (string EX_INFO)
 	{
