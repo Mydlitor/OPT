@@ -798,27 +798,26 @@ void lab5()
 	table1 << "a,w,x1_start,x2_start,x1_opt,x2_opt,f1_opt,f2_opt,f_opt,f_calls" << endl;
 	table1.precision(10);
 	
-	// For each value of parameter a
-	for (int a_idx = 0; a_idx < 3; a_idx++) {
-		double a = a_values[a_idx];
+	// 101 optimizations for w = 0.00, 0.01, 0.02, ..., 1.00
+	// For each w, use the SAME starting point for all values of a
+	for (int w_idx = 0; w_idx <= 100; w_idx++) {
+		double w = w_idx / 100.0;
 		
-		cout << "\n--- Testing with a = " << a << " ---" << endl;
+		// Generate ONE random starting point for this w (shared across all a values)
+		matrix x0(2, 1);
+		x0(0) = (rand() / (double)RAND_MAX) * 20.0 - 10.0;
+		x0(1) = (rand() / (double)RAND_MAX) * 20.0 - 10.0;
 		
-		// 101 optimizations for w = 0.00, 0.01, 0.02, ..., 1.00
-		for (int w_idx = 0; w_idx <= 100; w_idx++) {
-			double w = w_idx / 100.0;
-			
-			// Random starting point in [-10, 10] x [-10, 10]
-			matrix x0(2, 1);
-			x0(0) = (rand() / (double)RAND_MAX) * 20.0 - 10.0;
-			x0(1) = (rand() / (double)RAND_MAX) * 20.0 - 10.0;
+		// For each value of parameter a, use the same starting point
+		for (int a_idx = 0; a_idx < 3; a_idx++) {
+			double a = a_values[a_idx];
 			
 			// Setup parameters: ud1(0) = a, ud1(1) = w
 			matrix params(2, 1);
 			params(0) = a;
 			params(1) = w;
 			
-			// Run Powell optimization
+			// Run Powell optimization with the same x0 for all a
 			solution::clear_calls();
 			solution opt = Powell(ff5T, x0, epsilon, Nmax, params, NAN);
 			
@@ -833,10 +832,9 @@ void lab5()
 			       << f1_opt(0) << "," << f2_opt(0) << ","
 			       << opt.y(0) << "," << solution::f_calls << endl;
 			
-			// Print progress every 10 iterations
-			if (w_idx % 10 == 0) {
-				cout << "  w=" << w << ": x*=[" << opt.x(0) << "," << opt.x(1) 
-				     << "], f1*=" << f1_opt(0) << ", f2*=" << f2_opt(0) << endl;
+			// Print progress every 10 iterations for a=1
+			if (w_idx % 10 == 0 && a_idx == 0) {
+				cout << "  w=" << w << ": x_start=[" << x0(0) << "," << x0(1) << "]" << endl;
 			}
 		}
 	}
