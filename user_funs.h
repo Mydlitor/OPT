@@ -21,3 +21,4 @@ matrix gf4T(matrix, matrix = NAN, matrix = NAN);
 matrix Hf4T(matrix, matrix = NAN, matrix = NAN);
 matrix ff4R_cost(matrix, matrix = NAN, matrix = NAN);
 matrix gf4R_grad(matrix, matrix = NAN, matrix = NAN);
+matrix ff5T(matrix, matrix = NAN, matrix = NAN);

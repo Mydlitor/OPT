@@ -1,4 +1,9 @@
 ﻿#include "opt_alg.h"
+#include <fstream>
+
+// Global variables for trajectory tracking
+bool g_track_trajectory = false;
+std::ofstream g_trajectory_file;
 
 solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
@@ -600,11 +605,7 @@ solution pen(matrix(*ff)(matrix, matrix, matrix), matrix x0, double c, double dc
 bool odleglosc_wieksza_od_epsilon(matrix* p, int n, int min_idx, double epsilon) {
 	for (int i = 0; i <= n; i++) {
 		if (i == min_idx) continue;
-		double dist = 0.0;
-		for (int j = 0; j < n; j++) {
-			dist += pow(p[min_idx](j) - p[i](j), 2);
-		}
-		if (sqrt(dist) >= epsilon) return true;
+		if (norm(p[min_idx] - p[i]) >= epsilon) return true;
 	}
 	return false;
 }
@@ -731,228 +732,230 @@ static matrix g_direction_line_search;
 static matrix g_ud1_line_search;
 static matrix g_ud2_line_search;
 
-// Wrapper function for line search: evaluates f(x_base + alpha * direction)
+void setup_line_search(matrix(*ff)(matrix, matrix, matrix), matrix x_base, matrix dir, matrix ud1, matrix ud2)
+{
+	g_ff_line_search = ff;
+	g_x_base_line_search = x_base;
+	g_direction_line_search = dir;
+	g_ud1_line_search = ud1;
+	g_ud2_line_search = ud2;
+}
+
 matrix line_search_objective(matrix alpha, matrix ud1, matrix ud2)
 {
 	matrix x_eval = g_x_base_line_search + m2d(alpha) * g_direction_line_search;
 	return g_ff_line_search(x_eval, g_ud1_line_search, g_ud2_line_search);
 }
 
-solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		Xopt.x = x0;
-		Xopt.fit_fun(ff, ud1, ud2);
+// solution SD(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+// {
+// 	try
+// 	{
+// 		solution Xopt;
+// 		Xopt.x = x0;
+// 		Xopt.fit_fun(ff, ud1, ud2);
 		
-		solution XB = Xopt;
+// 		solution XB = Xopt;
 		
-		int iteration = 0;
-		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
+// 		int iteration = 0;
+// 		const int MAX_ITERATIONS = 10000;
 		
-		while (true) {
-			// Compute gradient using solution class method
-			matrix grad = XB.grad(gf, ud1, ud2);
+// 		while (true) {
+// 			matrix grad = XB.grad(gf, ud1, ud2);
 			
-			// Check gradient norm for convergence
-			if (norm(grad) < epsilon) {
-				Xopt.flag = 1;
-				break;
-			}
+// 			if (norm(grad) < epsilon) {
+// 				Xopt.flag = 1;
+// 				break;
+// 			}
 			
-			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
-				Xopt.flag = 0;
-				break;
-			}
+// 			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
+// 				Xopt.flag = 0;
+// 				break;
+// 			}
 			
-			// Direction is negative gradient
-			matrix d = -grad;
+// 			matrix d = -grad;
 			
-			// If h0 > 0, use fixed step size
-			// If h0 == 0, use line search (golden section)
-			double step_size;
-			if (h0 > 0) {
-				step_size = h0;
-			} else {
-				// Use existing golden function for line search
-				g_ff_line_search = ff;
-				g_x_base_line_search = XB.x;
-				g_direction_line_search = d;
-				g_ud1_line_search = ud1;
-				g_ud2_line_search = ud2;
+// 			double step_size;
+// 			if (h0 > 0) {
+// 				step_size = h0;
+// 			} else {
+// 				g_ff_line_search = ff;
+// 				g_x_base_line_search = XB.x;
+// 				g_direction_line_search = d;
+// 				g_ud1_line_search = ud1;
+// 				g_ud2_line_search = ud2;
 				
-				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
-				step_size = m2d(alpha_opt.x);
-			}
+// 				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
+// 				step_size = m2d(alpha_opt.x);
+// 			}
 			
-			// Update position
-			Xopt.x = XB.x + step_size * d;
-			Xopt.fit_fun(ff, ud1, ud2);
+// 			Xopt.x = XB.x + step_size * d;
+// 			Xopt.fit_fun(ff, ud1, ud2);
 			
-			// Update best solution
-			XB = Xopt;
+// 			XB = Xopt;
 			
-			iteration++;
-		}
+// 			if (g_track_trajectory && g_trajectory_file.is_open()) {
+// 				g_trajectory_file << XB.x(0) << "," << XB.x(1) << "," << XB.y(0) << std::endl;
+// 			}
+			
+// 			iteration++;
+// 		}
 		
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution SD(...):\n" + ex_info);
-	}
-}
+// 		return Xopt;
+// 	}
+// 	catch (string ex_info)
+// 	{
+// 		throw ("solution SD(...):\n" + ex_info);
+// 	}
+// }
 
-solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		Xopt.x = x0;
-		Xopt.fit_fun(ff, ud1, ud2);
+// solution CG(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+// {
+// 	try
+// 	{
+// 		solution Xopt;
+// 		Xopt.x = x0;
+// 		Xopt.fit_fun(ff, ud1, ud2);
 		
-		solution XB = Xopt;
-		matrix grad = XB.grad(gf, ud1, ud2);
-		matrix d = -grad; // Initial direction
-		matrix grad_prev;
+// 		solution XB = Xopt;
+// 		matrix grad = XB.grad(gf, ud1, ud2);
+// 		matrix d = -grad;
+// 		matrix grad_prev;
 		
-		int iteration = 0;
-		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
+// 		if (g_track_trajectory && g_trajectory_file.is_open()) {
+// 			g_trajectory_file << XB.x(0) << "," << XB.x(1) << "," << XB.y(0) << std::endl;
+// 		}
 		
-		while (true) {
-			// Check gradient norm for convergence
-			if (norm(grad) < epsilon) {
-				Xopt.flag = 1;
-				break;
-			}
+// 		int iteration = 0;
+// 		const int MAX_ITERATIONS = 10000;
+		
+// 		while (true) {
+// 			if (norm(grad) < epsilon) {
+// 				Xopt.flag = 1;
+// 				break;
+// 			}
 			
-			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
-				Xopt.flag = 0;
-				break;
-			}
+// 			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
+// 				Xopt.flag = 0;
+// 				break;
+// 			}
 			
-			// If h0 > 0, use fixed step size
-			// If h0 == 0, use line search (golden section)
-			double step_size;
-			if (h0 > 0) {
-				step_size = h0;
-			} else {
-				// Use existing golden function for line search
-				g_ff_line_search = ff;
-				g_x_base_line_search = XB.x;
-				g_direction_line_search = d;
-				g_ud1_line_search = ud1;
-				g_ud2_line_search = ud2;
+// 			double step_size;
+// 			if (h0 > 0) {
+// 				step_size = h0;
+// 			} else {
+// 				g_ff_line_search = ff;
+// 				g_x_base_line_search = XB.x;
+// 				g_direction_line_search = d;
+// 				g_ud1_line_search = ud1;
+// 				g_ud2_line_search = ud2;
 				
-				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
-				step_size = m2d(alpha_opt.x);
-			}
+// 				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
+// 				step_size = m2d(alpha_opt.x);
+// 			}
 			
-			// Update position
-			Xopt.x = XB.x + step_size * d;
-			Xopt.fit_fun(ff, ud1, ud2);
+// 			Xopt.x = XB.x + step_size * d;
+// 			Xopt.fit_fun(ff, ud1, ud2);
 			
-			// Compute new gradient using solution class method
-			grad_prev = grad;
-			grad = Xopt.grad(gf, ud1, ud2);
+// 			grad_prev = grad;
+// 			grad = Xopt.grad(gf, ud1, ud2);
 			
-			// Fletcher-Reeves formula: beta = ||grad_new||^2 / ||grad_old||^2
-			double grad_norm_sq = norm(grad) * norm(grad);
-			double grad_prev_norm_sq = norm(grad_prev) * norm(grad_prev);
+// 			double grad_norm_sq = norm(grad) * norm(grad);
+// 			double grad_prev_norm_sq = norm(grad_prev) * norm(grad_prev);
 			
-			double beta = 0.0;
-			if (grad_prev_norm_sq > 1e-15) {
-				beta = grad_norm_sq / grad_prev_norm_sq;
-			}
+// 			double beta = 0.0;
+// 			if (grad_prev_norm_sq > 1e-15) {
+// 				beta = grad_norm_sq / grad_prev_norm_sq;
+// 			}
 			
-			// Update direction: d = -grad + beta * d_prev
-			d = -grad + beta * d;
+// 			d = -grad + beta * d;
 			
-			// Update best solution
-			XB = Xopt;
+// 			XB = Xopt;
 			
-			iteration++;
-		}
+// 			if (g_track_trajectory && g_trajectory_file.is_open()) {
+// 				g_trajectory_file << XB.x(0) << "," << XB.x(1) << "," << XB.y(0) << std::endl;
+// 			}
+			
+// 			iteration++;
+// 		}
 		
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution CG(...):\n" + ex_info);
-	}
-}
+// 		return Xopt;
+// 	}
+// 	catch (string ex_info)
+// 	{
+// 		throw ("solution CG(...):\n" + ex_info);
+// 	}
+// }
 
-solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix),
-	matrix(*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
-{
-	try
-	{
-		solution Xopt;
-		Xopt.x = x0;
-		Xopt.fit_fun(ff, ud1, ud2);
+// solution Newton(matrix(*ff)(matrix, matrix, matrix), matrix(*gf)(matrix, matrix, matrix),
+// 	matrix(*Hf)(matrix, matrix, matrix), matrix x0, double h0, double epsilon, int Nmax, matrix ud1, matrix ud2)
+// {
+// 	try
+// 	{
+// 		solution Xopt;
+// 		Xopt.x = x0;
+// 		Xopt.fit_fun(ff, ud1, ud2);
 		
-		solution XB = Xopt;
+// 		solution XB = Xopt;
 		
-		int iteration = 0;
-		const int MAX_ITERATIONS = 10000; // Maximum iterations to prevent infinite loops
+// 		if (g_track_trajectory && g_trajectory_file.is_open()) {
+// 			g_trajectory_file << XB.x(0) << "," << XB.x(1) << "," << XB.y(0) << std::endl;
+// 		}
 		
-		while (true) {
-			// Compute gradient using solution class method
-			matrix grad = XB.grad(gf, ud1, ud2);
+// 		int iteration = 0;
+// 		const int MAX_ITERATIONS = 10000;
+		
+// 		while (true) {
+// 			matrix grad = XB.grad(gf, ud1, ud2);
 			
-			// Check gradient norm for convergence
-			if (norm(grad) < epsilon) {
-				Xopt.flag = 1;
-				break;
-			}
+// 			if (norm(grad) < epsilon) {
+// 				Xopt.flag = 1;
+// 				break;
+// 			}
 			
-			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
-				Xopt.flag = 0;
-				break;
-			}
+// 			if (solution::f_calls > Nmax || iteration >= MAX_ITERATIONS) {
+// 				Xopt.flag = 0;
+// 				break;
+// 			}
 			
-			// Compute Hessian using solution class method
-			matrix H = XB.hess(Hf, ud1, ud2);
+// 			matrix H = XB.hess(Hf, ud1, ud2);
 			
-			// Newton direction: d = -H^{-1} * grad
-			matrix H_inv = inv(H);
-			matrix d = -(H_inv * grad);
+// 			matrix H_inv = inv(H);
+// 			matrix d = -(H_inv * grad);
 			
-			// If h0 > 0, use fixed step size
-			// If h0 == 0, use line search (golden section)
-			double step_size;
-			if (h0 > 0) {
-				step_size = h0;
-			} else {
-				// Use existing golden function for line search
-				g_ff_line_search = ff;
-				g_x_base_line_search = XB.x;
-				g_direction_line_search = d;
-				g_ud1_line_search = ud1;
-				g_ud2_line_search = ud2;
+// 			double step_size;
+// 			if (h0 > 0) {
+// 				step_size = h0;
+// 			} else {
+// 				g_ff_line_search = ff;
+// 				g_x_base_line_search = XB.x;
+// 				g_direction_line_search = d;
+// 				g_ud1_line_search = ud1;
+// 				g_ud2_line_search = ud2;
 				
-				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
-				step_size = m2d(alpha_opt.x);
-			}
+// 				solution alpha_opt = golden(line_search_objective, 0.0, 2.0, 1e-6, Nmax, ud1, ud2);
+// 				step_size = m2d(alpha_opt.x);
+// 			}
 			
-			// Update position
-			Xopt.x = XB.x + step_size * d;
-			Xopt.fit_fun(ff, ud1, ud2);
+// 			Xopt.x = XB.x + step_size * d;
+// 			Xopt.fit_fun(ff, ud1, ud2);
 			
-			// Update best solution
-			XB = Xopt;
+// 			XB = Xopt;
 			
-			iteration++;
-		}
+// 			if (g_track_trajectory && g_trajectory_file.is_open()) {
+// 				g_trajectory_file << XB.x(0) << "," << XB.x(1) << "," << XB.y(0) << std::endl;
+// 			}
+			
+// 			iteration++;
+// 		}
 		
-		return Xopt;
-	}
-	catch (string ex_info)
-	{
-		throw ("solution Newton(...):\n" + ex_info);
-	}
-}
+// 		return Xopt;
+// 	}
+// 	catch (string ex_info)
+// 	{
+// 			throw ("solution Newton(...):\n" + ex_info);
+// 	}
+// }
 
 solution golden(matrix(*ff)(matrix, matrix, matrix), double a, double b, double epsilon, int Nmax, matrix ud1, matrix ud2)
 {
@@ -960,7 +963,7 @@ solution golden(matrix(*ff)(matrix, matrix, matrix), double a, double b, double 
 	{
 		solution Xopt;
 		
-		double alpha = (sqrt(5.0) - 1.0) / 2.0; // golden ratio constant
+		double alpha = (sqrt(5.0) - 1.0) / 2.0;
 		
 		double c = b - alpha * (b - a);
 		double d = a + alpha * (b - a);
@@ -1013,8 +1016,64 @@ solution Powell(matrix(*ff)(matrix, matrix, matrix), matrix x0, double epsilon, 
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
-
+		
+		int n = get_len(x0);
+		matrix D = ident_mat(n);
+		matrix A(n, 2);
+		matrix x = x0;
+		
+		do {
+			matrix p0 = x;
+			matrix p_prev = p0;
+			
+			for (int j = 0; j < n; j++) {
+				// wyznacz h_j(i)
+				A.set_col(p_prev, 0);
+				A.set_col(D[j], 1);
+				double* interval = expansion(ff, 0.0, 1.0, 2.0, Nmax, A, ud2);
+				solution h_opt = golden(ff, interval[0], interval[1], epsilon, Nmax, A, ud2);
+				double h_j = m2d(h_opt.x);
+				delete[] interval;
+				
+				matrix p_j = p_prev + h_j * D[j];
+				p_prev = p_j;
+			}
+			
+			matrix p_n = p_prev;
+			
+			if (norm(p_n - x) < epsilon) {
+				Xopt.x = x;
+				Xopt.fit_fun(ff, ud1, ud2);
+				Xopt.flag = 1;
+				return Xopt;
+			}
+			
+			for (int j = 0; j < n - 1; j++) {
+				D.set_col(D[j + 1], j);
+			}
+			
+			D.set_col(p_n - p0, n - 1);
+			
+			// wyznacz h_{n+1}(i)
+			A.set_col(p_n, 0);
+			A.set_col(D[n - 1], 1);
+			double* interval_np1 = expansion(ff, 0.0, 1.0, 2.0, Nmax, A, ud2);
+			solution h_opt_np1 = golden(ff, interval_np1[0], interval_np1[1], epsilon, Nmax, A, ud2);
+			double h_np1 = m2d(h_opt_np1.x);
+			delete[] interval_np1;
+			
+			matrix p_np1 = p_n + h_np1 * D[n - 1];
+			x = p_np1;
+			
+			if (solution::f_calls > Nmax) {
+				Xopt.x = x;
+				Xopt.fit_fun(ff, ud1, ud2);
+				Xopt.flag = 0;
+				return Xopt;
+			}
+			
+		} while (true);
+		
 		return Xopt;
 	}
 	catch (string ex_info)

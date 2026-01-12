@@ -1,0 +1,307 @@
+AKADEMIA GÓRNICZO-HUTNICZA
+KATEDRA INFORMATYKI STOSOWANEJ I MODELOWANIA
+
+METODY OPTYMALIZACJI
+Optymalizacja funkcji wielu zmiennych metodami gradientowymi
+1. Cel ćwiczenia.
+Celem ćwiczenia jest zapoznanie się z gradientowymi metodami optymalizacji poprzez ich
+implementację oraz wykorzystanie do wyznaczenia minimum podanej funkcji celu.
+2. Testowa funkcja celu.
+Funkcja celu dana jest wzorem:
+𝑓(𝑥 , 𝑥 ) = 1 6 𝑥 − 1,05𝑥 + 2𝑥 + 𝑥 + 𝑥 𝑥
+Jej wykres przedstawiony jest poniżej.
+
+Punkt startowy powinien należeć do przedziału 𝑥
+
+( )
+
+∈ [−2, 2], 𝑥
+
+( )
+
+∈ [−2, 2].
+
+3. Problem rzeczywisty.
+O przyjęciu na pewną uczelnię decydują oceny uzyskane z dwóch przedmiotów. Na poniższym
+rysunku przedstawiono przykładowe oceny wraz z decyzją o przyjęciu lub odrzuceniu kandydata.
+
+©Łukasz Sztangret, KISiM, AGH
+
+Przyjęty
+
+Nie przyjęty
+
+100
+
+Przedmiot 2
+
+80
+60
+40
+20
+20
+
+40
+
+60
+80
+Przedmiot 1
+
+100
+
+Celem optymalizacji jest znalezienie optymalnych parametrów klasyfikatora, który na podstawie
+otrzymanych ocen, będzie w stanie przewidzieć, czy dana osoba zostanie przyjęta na uczelnie.
+Klasyfikator będzie wykorzystywał hipotezę postaci:
+ℎ (𝐱) =
+
+1
+1+𝑒
+
+𝛉 𝐱
+
+𝜃
+1
+gdzie: wektor 𝛉 = 𝜃 zawiera szukane parametry klasyfikatora, wektor 𝐱 = 𝑥 zawiera oceny z
+𝑥
+𝜃
+przedmiotu 1 (𝑥 ) oraz przedmiotu 2 (𝑥 ).
+Klasyfikator wskaże, że i-ty kandydat zostanie przyjęty na uczelnię, jeżeli wartość hipotezy będzie
+większa lub równa 0,5, tj.:
+ℎ 𝐱
+
+≥ 0,5 ⟹ 𝑦 = 1
+
+Dane uczące (przedstawione na rysunku) są dostępne w plikach XData.txt oraz YData.txt w postaci
+macierzy 𝑋 oraz 𝑌:
+1
+𝑋 = [𝐱 , 𝐱 , … , 𝐱 ], 𝐱 = 𝑥 , 𝑖 = 1, … , 𝑚
+𝑥
+𝑌 = [𝑦 , 𝑦 , … , 𝑦 ], 𝑦 = {0,1}, 𝑖 = 1, … , 𝑚
+gdzie: liczba danych 𝑚 = 100, 𝑦 = 1 oznacza, że i-ty kandydat został przyjęty, 𝑦 = 0 oznacza,
+że i-ty kandydat nie został przyjęty .
+
+©Łukasz Sztangret, KISiM, AGH
+
+Poszukiwanie optymalnych parametrów klasyfikatora odbywa się poprzez minimalizację funkcji
+kosztu danej wzorem:
+𝐽(𝛉) = −
+
+1
+𝑚
+
+𝑦 ∙ ln ℎ 𝐱
+
++ 1−𝑦
+
+∙ ln 1 − ℎ 𝐱
+
+Pochodne cząstkowe funkcji kosztu 𝐽(𝛉) wynoszą:
+𝜕𝐽(𝛉) 1
+=
+𝜕𝜃
+𝑚
+
+ℎ 𝐱
+
+−𝑦
+
+∙ 𝑥 dla 𝑗 = 1, … , 𝑛
+
+gdzie: 𝑛 – liczba współrzędnych wektora gradientu.
+W celu sprawdzenia poprawności implementacji funkcji kosztu oraz jej gradientu, można obliczyć ich
+0,1
+wartości dla wektora 𝛉 = 0,1 . Poprawne wartości wynoszą w przybliżeniu: 𝐽(𝛉) = 2,72715 oraz
+0,1
+0,29985
+∇𝐽(𝛉) = 13,6056 .
+13,3547
+4. Algorytmy optymalizacji.
+Do wyznaczenia minimum funkcji celu należy zastosować:
+a. dla testowej funkcji celu metody najszybszego spadku, gradientów sprzężonych oraz
+Newtona, każdą w wersji stałokrokowej i zmiennokrokowej (długości kroku w wersji
+stałokrokowej należy przyjąć równe 0,05 oraz 0,25, w wersji zmiennokrokowej
+długość kroku należy wyznaczyć metodą złotego podziału),
+b. dla problemu rzeczywistego metodę gradientów sprzężonych w wersji stałokrokowej
+(długości kroku należy przyjąć równe 0,01, 0,001 oraz 0,0001).
+5. Zadanie do samodzielnego wykonania.
+a. Testowa funkcja celu.
+Zadanie polega na wykonaniu 100 optymalizacji dla każdej długości kroku startując z losowego
+punktu. Wyniki należy zestawić pliku xlsx w tabeli 1. Wartości średnie (tylko dla optymalizacji
+zakończonych znalezieniem minimum globalnego) należy przedstawić w tabeli 2. Dodatkowo, dla
+jednego wybranego punktu startowego należy narysować 6 wykresów. Na każdym, na wykres
+poziomic należy nanieś rozwiązania optymalne uzyskane po każdej iteracji:
+
+
+
+
+
+
+wykres 1 – dla długości kroku równej 0,05 rozwiązania otrzymane każdą z metod,
+wykres 2 – dla długości kroku równej 0,25 rozwiązania otrzymane każdą z metod,
+wykres 3 – dla wersji zmiennokrokowej rozwiązania otrzymane każdą z metod,
+wykres 4 – dla metody najszybszego spadku rozwiązania otrzymane dla każdej długości
+kroku,
+wykres 5 – dla metody gradientów sprzężonych rozwiązania otrzymane dla każdej długości
+kroku,
+
+©Łukasz Sztangret, KISiM, AGH
+
+
+
+wykres 6 – dla metody Newtona rozwiązania otrzymane dla każdej długości kroku.
+b. Problem rzeczywisty.
+
+Zadanie polega na wykonaniu jednej optymalizacji dla każdej długości kroku startując z punktu
+0
+𝛉( ) = 0 . Wyniki należy zestawić pliku xlsx w tabeli 3. W kolumnie 𝑃(𝛉∗ ) należy podać jaki procent
+0
+przypadków ze zbioru uczącego został poprawnie zaklasyfikowany, tj.:
+𝑃(𝛉∗ ) =
+
+1
+𝑚
+
+1 jeżeli ℎ 𝐱 = 𝑦
+0 w przeciwnym przypadku
+
+gdzie: [∙] oznacza zaokrąglenie liczby do najbliższej wartości całkowitej.
+Dodatkowo, na wykres przedstawiający przyjęte/nie przyjęte osoby należy nanieść granicę klasyfikacji
+otrzymaną dla najlepszego przypadku (arkusz wykres). Granica klasyfikacji dana jest równaniem:
+ℎ (𝐱) = 0,5
+W rozpatrywanym przypadku (przy założeniu, że 𝜃 ≠ 0) granica klasyfikacji to funkcja o równaniu:
+𝑥 =−
+
+𝜃 +𝜃 𝑥
+𝜃
+
+6. Sprawozdanie
+Sprawozdanie powinno zostać przygotowane w formacie docx (lub doc) albo pdf i powinno zawierać
+parametry poszczególnych algorytmów, dyskusję wyników oraz wnioski. Dodatkowo, w
+sprawozdaniu należy umieścić kod zaimplementowanych metod, funkcję lab4 oraz funkcje
+wykorzystane do obliczenia funkcji celu, gradientu oraz hesjanu. Wyniki optymalizacji oraz wykresy
+należy przygotować w formacie xlsx (lub xls).
+
+Pseudokod metod gradientowych.
+Dane wejściowe: punkt startowy x(0), dokładność ε > 0, maksymalna liczba wywołań funkcji celu
+Nmax
+1:
+2:
+3:
+4:
+5:
+6:
+7:
+8:
+9:
+10:
+11:
+
+i = 0
+repeat
+wyznacz d(i)
+wyznacz h(i)
+x(i+1) = x(i) + h(i)·d(i)
+i = i + 1
+if fcalls > Nmax then
+return error
+end if
+until ||x(i) – x(i-1)||2 < ε
+return x* = x(i)
+
+©Łukasz Sztangret, KISiM, AGH
+
+Kierunek d(i) wyznacza się ze wzoru:
+
+
+dla metody najszybszego spadku:
+
+𝑑( ) = −∇𝑓 𝑥 ( )
+
+
+
+dla metody gradientów sprzężonych:
+
+𝑑(
+
+)
+
+= −∇𝑓 𝑥 (
+
+)
+
+𝑑( ) = −∇𝑓 𝑥 ( ) + 𝛽 ∙ 𝑑(
+𝛽=
+
+
+
+dla metody Newtona:
+
+()
+
+∇
+∇
+
+𝑑( ) = −𝐻
+
+)
+
+(
+
+)
+
+𝑥 ( ) ∇𝑓 𝑥 ( )
+
+Pseudokod metody złotego podziału.
+Dane wejściowe: przedział poszukiwań [a, b], dokładność obliczeń ε > 0, maksymalna liczba
+wywołań funkcji celu Nmax
+1:
+2:
+3:
+4:
+5:
+6:
+7:
+8:
+9:
+10:
+11:
+12:
+13:
+14:
+15:
+16:
+17:
+18:
+19:
+20:
+21:
+22:
+23:
+
+i = 0
+α = (50,5 – 1) / 2
+a(0) = a, b(0) = b
+c(0) = b(0) – α(b(0) – a(0))
+d(0) = a(0) + α(b(0) – a(0))
+repeat
+if f(c(i)) < f(d(i)) then
+a(i+1) = a(i)
+b(i+1) = d(i)
+c(i+1) = b(i+1) - α(b(i+1) – a(i+1))
+d(i+1) = c(i)
+else
+a(i+1) = c(i)
+b(i+1) = b(i)
+c(i+1) = d(i)
+d(i+1) = a(i+1) + α(b(i+1) – a(i+1))
+end if
+i = i + 1
+if fcalls > Nmax then
+return error
+end if
+until b(i) – a(i) < ε
+return x* = (a(i) + b(i)) / 2
+
+©Łukasz Sztangret, KISiM, AGH
+
+

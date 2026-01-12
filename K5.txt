@@ -1,0 +1,135 @@
+AKADEMIA GÓRNICZO-HUTNICZA
+KATEDRA INFORMATYKI STOSOWANEJ I MODELOWANIA
+
+METODY OPTYMALIZACJI
+Optymalizacja wielokryterialna
+1. Cel ćwiczenia.
+Celem ćwiczenia jest zapoznanie się z problematyką optymalizacji wielokryterialnej i wyznaczenie
+rozwiązań minimalnych w sensie Pareto.
+2. Testowa funkcje celu.
+Funkcje celu dane są wzorami:
+𝑓 (𝑥 , 𝑥 ) = 𝑎((𝑥 − 3) + (𝑥 − 3) )
+𝑓 (𝑥 , 𝑥 ) = 1 𝑎 ((𝑥 + 3) + (𝑥 + 3) )
+gdzie: 𝑎 jest parametrem, którego wartość należy przyjąć równą:
+ 𝑎 = 1,
+ 𝑎 = 10,
+ 𝑎 = 100.
+Punkt startowy powinien należeć do przedziału 𝑥
+
+( )
+
+∈ [−10, 10], 𝑥
+
+( )
+
+∈ [−10, 10].
+
+3. Problem rzeczywisty.
+Belka o długości 𝑙 i przekroju kołowym o średnicy 𝑑 jest obciążona siłą 𝑃.
+
+Ugięcie belki pod wpływem działania siły wynosi:
+𝑢=
+występujące naprężenie wynosi:
+
+©Łukasz Sztangret, KISiM, AGH
+
+64 ∙ 𝑃 ∙ 𝑙
+3∙𝐸∙𝜋∙𝑑
+
+𝜎=
+
+32 ∙ 𝑃 ∙ 𝑙
+𝜋∙𝑑
+
+gdzie:
+𝑃 = 2 kN to działająca siła, 𝐸 = 120 GPa to moduł Young,
+Pierwszym kryterium optymalizacji jest masa belki (𝑓 ), drugim jej ugięcie (𝑓 ). Gęstość materiału z
+kg
+którego wykonana jest belka wynosi 𝜌 = 8920
+. Jako zmienne optymalizacji należy przyjąć
+m
+zmienne 𝑙 oraz 𝑑 (𝑙 ∈ [200 mm, 1000 mm], 𝑑 ∈ [10 mm, 50 mm]). Dodatkowymi ograniczeniami są
+maksymalne ugięcie belki równe 𝑢
+= 2,5 mm oraz maksymalne naprężanie 𝜎
+= 300 MPa. W
+celu sprawdzenia poprawności implementacji równań, można policzyć masę i ugięcie belki oraz
+występujące w niej naprężenie dla 𝑙 = 500 mm oraz 𝑑 = 25 mm. Poprawne wartości wynoszą w
+przybliżeniu: 𝑚 ≈ 2,19 kg, 𝑢 ≈ 36,22 mm oraz 𝜎 ≈ 651,9 MPa.
+4. Algorytmy optymalizacji.
+Problem wielokryterialny należy zamienić na problem jednokryterialny stosując metodę kryterium
+ważonego, tj. przyjąć:
+𝑓(𝐱) = 𝑤 ∙ 𝑓 (𝐱) + (1 − 𝑤) ∙ 𝑓 (𝐱)
+gdzie: 𝑤 ∈ [0,1].
+Do wyznaczenia minimum funkcji celu należy zastosować metodę Powella. Minimalizację na kierunku
+należy przeprowadzić metodą złotego podziału. Początkowy przedział należy wyznaczyć metodą
+ekspansji. Ograniczenia występujące w problemie rzeczywistym należy uwzględnić stosując
+zewnętrzną funkcję kary.
+5. Zadanie do samodzielnego wykonania.
+a. Testowa funkcja celu.
+Zadanie polega na przeprowadzeniu 101 optymalizacji (dla 𝑤 = {0, 0.01, 0.02, … ,1}) dla każdej
+wartości parametru 𝑎 startując z losowego punktu początkowego. Wyniki należy zestawić w pliku xlsx
+w tabeli 1. Dla każdej wartości parametru 𝑎 należy narysować wykres przedstawiający rozwiązania
+minimalne w sensie Pareto.
+b. Problem rzeczywisty.
+Zadanie polega na przeprowadzeniu 101 optymalizacji (dla 𝑤 = {0, 0.01, 0.02, … ,1}) startując z
+losowego punktu początkowego. Wyniki należy zestawić w pliku xlsx w tabeli 2. Dodatkowo, należy
+narysować wykres przedstawiający rozwiązania minimalne w sensie Pareto.
+6. Sprawozdanie.
+Sprawozdanie powinno zostać przygotowane w formacie docx (lub doc) albo pdf i powinno zawierać
+parametry poszczególnych algorytmów, dyskusję wyników oraz wnioski. Dodatkowo, w
+sprawozdaniu należy umieścić kod zaimplementowanych metod, funkcję lab5 oraz funkcję
+wykorzystaną do obliczenia funkcji celu. Wyniki optymalizacji należy przygotować w formacie xlsx
+(lub xls).
+
+©Łukasz Sztangret, KISiM, AGH
+
+Pseudokod metody Powella.
+Dane wejściowe: punkt startowy x(0), dokładność ε > 0, maksymalna liczba wywołań funkcji celu
+Nmax
+1:
+2:
+3:
+4:
+5:
+6:
+7:
+8:
+9:
+10:
+11:
+12:
+13:
+14:
+15:
+16:
+17:
+18:
+19:
+20:
+21:
+
+i = 0
+dj(0) = ej, j = 1, 2, …, n
+repeat
+p0(i) = x(i)
+for j = 1 to n do
+wyznacz hj(i)
+pj(i) = pj-1(i) + hj(i)·dj(i)
+end for
+if ||pn(i) – x(i)||2 < ε then
+return x* = x(i)
+end if
+for j = 1 to n – 1 do
+dj(i+1) = dj+1(i)
+end for
+dn(i+1) = pn(i) – p0(i)
+wyznacz hn+1(i)
+pn+1(i) = pn(i) + hn+1(i)·dn(i+1)
+x(i+1) = pn+1(i)
+i = i + 1
+until fcalls > Nmax
+return error
+
+©Łukasz Sztangret, KISiM, AGH
+
+

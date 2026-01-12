@@ -4,6 +4,11 @@
 
 #include"solution.h"
 #include"matrix.h"
+#include <fstream>
+
+// Global variables for trajectory tracking
+extern bool g_track_trajectory;
+extern std::ofstream g_trajectory_file;
 
 solution MC(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, double epsilon, int Nmax, matrix ud1 = NAN, matrix ud2 = NAN);
 
