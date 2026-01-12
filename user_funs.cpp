@@ -494,37 +494,44 @@ matrix ff5R(matrix x, matrix ud1, matrix ud2) {
     double l_orig = m2d(x(1));  // length in mm
     double w = m2d(ud1(0)); // weight
     
-    // Constants
-    const double P = 3000.0;        // force in N (3 kN)
+    // Constants from K5.pdf
+    const double P = 2000.0;        // force in N (2 kN)
     const double E = 120e9;         // Young's modulus in Pa (120 GPa)
     const double rho = 8920.0;      // density in kg/m^3
     const double u_max = 2.5;       // max deflection in mm
     const double sigma_max = 300e6; // max stress in Pa (300 MPa)
     
-    const double penalty_coef = 1e5;  // Reduced from 1e10 to avoid overflow
+    // Bounds from K5.pdf
+    const double d_min = 10.0;      // min diameter in mm
+    const double d_max = 50.0;      // max diameter in mm
+    const double l_min = 200.0;     // min length in mm
+    const double l_max = 1000.0;    // max length in mm
     
-    // Penalty for bounds: d in [0.01, 1000], l in [0.2, 1000]
+    // External penalty coefficient
+    const double penalty_coef = 1e6;
+    
+    // Penalty for bounds violations
     double f = 0.0;
     
     // Apply penalties for out-of-bounds, but clamp for calculation
     double d = d_orig;
     double l = l_orig;
     
-    if (d_orig < 0.01) {
-        f += penalty_coef * pow(0.01 - d_orig, 2);
-        d = 0.01;
+    if (d_orig < d_min) {
+        f += penalty_coef * pow(d_min - d_orig, 2);
+        d = d_min;
     }
-    if (d_orig > 1000.0) {
-        f += penalty_coef * pow(d_orig - 1000.0, 2);
-        d = 1000.0;
+    if (d_orig > d_max) {
+        f += penalty_coef * pow(d_orig - d_max, 2);
+        d = d_max;
     }
-    if (l_orig < 0.2) {
-        f += penalty_coef * pow(0.2 - l_orig, 2);
-        l = 0.2;
+    if (l_orig < l_min) {
+        f += penalty_coef * pow(l_min - l_orig, 2);
+        l = l_min;
     }
-    if (l_orig > 1000.0) {
-        f += penalty_coef * pow(l_orig - 1000.0, 2);
-        l = 1000.0;
+    if (l_orig > l_max) {
+        f += penalty_coef * pow(l_orig - l_max, 2);
+        l = l_max;
     }
     
     // Convert to SI units (meters)
@@ -548,17 +555,15 @@ matrix ff5R(matrix x, matrix ud1, matrix ud2) {
     // Weighted objective
     f += w * f1 + (1.0 - w) * f2;
     
-    // Add penalties for constraint violations
-    const double constraint_penalty = 1e4;  // Reduced from 1e6
-    
+    // Add penalties for constraint violations (external penalty method)
     // Penalty for deflection constraint: u <= u_max
     if (u > u_max) {
-        f += constraint_penalty * pow(u - u_max, 2);
+        f += penalty_coef * pow(u - u_max, 2);
     }
     
     // Penalty for stress constraint: sigma <= sigma_max
     if (sigma > sigma_max) {
-        f += constraint_penalty * pow((sigma - sigma_max) / 1e6, 2);  // normalize to MPa scale
+        f += penalty_coef * pow((sigma - sigma_max) / 1e6, 2);  // normalize to MPa scale
     }
     
     return matrix(f);

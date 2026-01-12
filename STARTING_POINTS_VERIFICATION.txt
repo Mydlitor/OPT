@@ -1,0 +1,66 @@
+=================================================
+VERIFICATION: Starting Points in Table 1
+=================================================
+
+Issue: Starting points should be IDENTICAL for all three values of 'a' 
+       at the same weight 'w'.
+
+Solution: Restructured loops so that:
+- Outer loop: iterate over w (0.00 to 1.00)
+- Inner loop: iterate over a (1, 10, 100)
+- Generate ONE random starting point per w value
+- Use that same starting point for all three a values
+
+=================================================
+VERIFICATION RESULTS
+=================================================
+
+Sample 1: w = 0.0
+-----------------
+a=1:   x_start = (-9.330601, -3.400716)  ✓
+a=10:  x_start = (-9.330601, -3.400716)  ✓
+a=100: x_start = (-9.330601, -3.400716)  ✓
+SAME STARTING POINT ✓
+
+Sample 2: w = 0.5
+-----------------
+a=1:   x_start = (-8.568629, 4.786043)  ✓
+a=10:  x_start = (-8.568629, 4.786043)  ✓
+a=100: x_start = (-8.568629, 4.786043)  ✓
+SAME STARTING POINT ✓
+
+Sample 3: w = 1.0
+-----------------
+a=1:   x_start = (6.991878, 6.916992)  ✓
+a=10:  x_start = (6.991878, 6.916992)  ✓
+a=100: x_start = (6.991878, 6.916992)  ✓
+SAME STARTING POINT ✓
+
+=================================================
+BENEFIT
+=================================================
+
+This ensures a FAIR COMPARISON between different values of 'a':
+- Same initial conditions for all a values
+- Differences in solutions reflect only the effect of parameter 'a'
+- More scientifically valid for comparing Pareto fronts
+
+=================================================
+TABLE STRUCTURE (after fix)
+=================================================
+
+For each w from 0.00 to 1.00 (101 values):
+  Generate ONE random starting point (x1_start, x2_start)
+  For a = 1:
+    Run optimization with this starting point
+    Write: a=1, w, x1_start, x2_start, results...
+  For a = 10:
+    Run optimization with SAME starting point
+    Write: a=10, w, x1_start, x2_start, results...
+  For a = 100:
+    Run optimization with SAME starting point
+    Write: a=100, w, x1_start, x2_start, results...
+
+Total: 101 w values × 3 a values = 303 rows (+ 1 header = 304 lines)
+
+=================================================

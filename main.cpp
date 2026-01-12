@@ -22,11 +22,9 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		// Current lab: Lab4 - Gradient-based optimization
+		// Current lab: Lab5 - Multi-criteria optimization
 		// Change this line to switch between different labs
-		// To run lab5: uncomment the line below and comment out lab4()
-		// lab5();
-		lab4();
+		lab5();
 	}
 	catch (string EX_INFO)
 	{
@@ -795,34 +793,30 @@ void lab5()
 	// Parameter values for a
 	double a_values[] = {1.0, 10.0, 100.0};
 	
-	// For each value of parameter a
-	for (int a_idx = 0; a_idx < 3; a_idx++) {
-		double a = a_values[a_idx];
+	// Store results in memory first, then write in desired order
+	// results[a_idx][w_idx] = {a, w, x1_start, x2_start, x1_opt, x2_opt, f1_opt, f2_opt, f_opt, f_calls}
+	vector<vector<vector<double>>> results(3, vector<vector<double>>(101));
+	
+	// 101 optimizations for w = 0.00, 0.01, 0.02, ..., 1.00
+	// For each w, use the SAME starting point for all values of a
+	for (int w_idx = 0; w_idx <= 100; w_idx++) {
+		double w = w_idx / 100.0;
 		
-		cout << "\n--- Testing with a = " << a << " ---" << endl;
+		// Generate ONE random starting point for this w (shared across all a values)
+		matrix x0(2, 1);
+		x0(0) = (rand() / (double)RAND_MAX) * 20.0 - 10.0;
+		x0(1) = (rand() / (double)RAND_MAX) * 20.0 - 10.0;
 		
-		// Create output file
-		stringstream filename;
-		filename << "lab5_test_a" << (int)a << ".csv";
-		ofstream outfile(filename.str());
-		outfile << "w,x1_start,x2_start,x1_opt,x2_opt,f1_opt,f2_opt,f_opt,f_calls" << endl;
-		outfile.precision(10);
-		
-		// 101 optimizations for w = 0.00, 0.01, 0.02, ..., 1.00
-		for (int w_idx = 0; w_idx <= 100; w_idx++) {
-			double w = w_idx / 100.0;
-			
-			// Random starting point in [-10, 10] x [-10, 10]
-			matrix x0(2, 1);
-			x0(0) = (rand() / (double)RAND_MAX) * 20.0 - 10.0;
-			x0(1) = (rand() / (double)RAND_MAX) * 20.0 - 10.0;
+		// For each value of parameter a, use the same starting point
+		for (int a_idx = 0; a_idx < 3; a_idx++) {
+			double a = a_values[a_idx];
 			
 			// Setup parameters: ud1(0) = a, ud1(1) = w
 			matrix params(2, 1);
 			params(0) = a;
 			params(1) = w;
 			
-			// Run Powell optimization
+			// Run Powell optimization with the same x0 for all a
 			solution::clear_calls();
 			solution opt = Powell(ff5T, x0, epsilon, Nmax, params, NAN);
 			
@@ -830,23 +824,35 @@ void lab5()
 			matrix f1_opt = ff5_f1(opt.x, params, NAN);
 			matrix f2_opt = ff5_f2(opt.x, params, NAN);
 			
-			// Write results
-			outfile << w << ","
-			        << x0(0) << "," << x0(1) << ","
-			        << opt.x(0) << "," << opt.x(1) << ","
-			        << f1_opt(0) << "," << f2_opt(0) << ","
-			        << opt.y(0) << "," << solution::f_calls << endl;
+			// Store results in memory
+			results[a_idx][w_idx] = {a, w, x0(0), x0(1), opt.x(0), opt.x(1), 
+			                          m2d(f1_opt), m2d(f2_opt), m2d(opt.y), (double)solution::f_calls};
 			
-			// Print progress every 10 iterations
-			if (w_idx % 10 == 0) {
-				cout << "  w=" << w << ": x*=[" << opt.x(0) << "," << opt.x(1) 
-				     << "], f1*=" << f1_opt(0) << ", f2*=" << f2_opt(0) << endl;
+			// Print progress every 10 iterations for a=1
+			if (w_idx % 10 == 0 && a_idx == 0) {
+				cout << "  w=" << w << ": x_start=[" << x0(0) << "," << x0(1) << "]" << endl;
 			}
 		}
-		
-		outfile.close();
-		cout << "Results saved to " << filename.str() << endl;
 	}
+	
+	// Now write results to file in order: all a=1, then all a=10, then all a=100
+	ofstream table1("lab5_table1.csv");
+	table1 << "a,w,x1_start,x2_start,x1_opt,x2_opt,f1_opt,f2_opt,f_opt,f_calls" << endl;
+	table1.precision(10);
+	
+	for (int a_idx = 0; a_idx < 3; a_idx++) {
+		for (int w_idx = 0; w_idx <= 100; w_idx++) {
+			const auto& row = results[a_idx][w_idx];
+			table1 << row[0] << "," << row[1] << ","
+			       << row[2] << "," << row[3] << ","
+			       << row[4] << "," << row[5] << ","
+			       << row[6] << "," << row[7] << ","
+			       << row[8] << "," << (int)row[9] << endl;
+		}
+	}
+	
+	table1.close();
+	cout << "\nResults saved to lab5_table1.csv (303 rows: all test problems)" << endl;
 	
 	// ============================================================
 	// PART 2: REAL PROBLEM - CANTILEVER BEAM
@@ -854,27 +860,27 @@ void lab5()
 	cout << "\n=== PART 2: REAL PROBLEM - CANTILEVER BEAM ===" << endl;
 	
 	// Validation test - verify formulas work
-	cout << "\nValidation test (l=500mm, d=30mm):" << endl;
+	cout << "\nValidation test (l=500mm, d=25mm):" << endl;
 	{
 		matrix x_test(2, 1);
-		x_test(0) = 30.0;   // d = 30 mm
+		x_test(0) = 25.0;   // d = 25 mm
 		x_test(1) = 500.0;  // l = 500 mm
 		
 		// Constants for validation
-		const double P = 3000.0;
+		const double P = 2000.0;
 		const double E = 120e9;
 		const double rho = 8920.0;
 		
-		double d_m = 30.0 / 1000.0;
+		double d_m = 25.0 / 1000.0;
 		double l_m = 500.0 / 1000.0;
 		
 		double mass = rho * M_PI * pow(d_m / 2.0, 2) * l_m;
 		double u = (64.0 * P * pow(l_m, 3)) / (3.0 * E * M_PI * pow(d_m, 4)) * 1000.0;
 		double sigma = (32.0 * P * l_m) / (M_PI * pow(d_m, 3));
 		
-		cout << "  m = " << mass << " kg" << endl;
-		cout << "  u = " << u << " mm" << endl;
-		cout << "  sigma = " << sigma / 1e6 << " MPa" << endl;
+		cout << "  m = " << mass << " kg (expected ~2.19 kg)" << endl;
+		cout << "  u = " << u << " mm (expected ~36.22 mm)" << endl;
+		cout << "  sigma = " << sigma / 1e6 << " MPa (expected ~651.9 MPa)" << endl;
 		cout << "  Constraints: u_max=2.5mm, sigma_max=300MPa" << endl;
 		if (u <= 2.5) cout << "  Deflection OK" << endl;
 		else cout << "  Deflection VIOLATED" << endl;
@@ -882,10 +888,10 @@ void lab5()
 		else cout << "  Stress VIOLATED" << endl;
 	}
 	
-	// Create output file for beam optimization
-	ofstream beam_file("lab5_beam.csv");
-	beam_file << "w,d_start,l_start,d_opt,l_opt,mass,deflection,stress,f_opt,f_calls" << endl;
-	beam_file.precision(10);
+	// Create TABLE 2 - Output file for beam optimization (real problem)
+	ofstream table2("lab5_table2.csv");
+	table2 << "w,d_start,l_start,d_opt,l_opt,mass,deflection,stress,f_opt,f_calls" << endl;
+	table2.precision(10);
 	
 	cout << "\nRunning 101 optimizations for beam problem..." << endl;
 	
@@ -893,10 +899,16 @@ void lab5()
 	for (int w_idx = 0; w_idx <= 100; w_idx++) {
 		double w = w_idx / 100.0;
 		
-		// Random starting point: d in [0.01, 1000], l in [0.2, 1000]
+		// Random starting point: d in [d_min, d_max], l in [l_min, l_max]
+		// Bounds from K5.pdf: d in [10, 50] mm, l in [200, 1000] mm
+		const double d_min = 10.0;
+		const double d_max = 50.0;
+		const double l_min = 200.0;
+		const double l_max = 1000.0;
+		
 		matrix x0(2, 1);
-		x0(0) = (rand() / (double)RAND_MAX) * 999.99 + 0.01;   // d
-		x0(1) = (rand() / (double)RAND_MAX) * 999.8 + 0.2;     // l
+		x0(0) = (rand() / (double)RAND_MAX) * (d_max - d_min) + d_min;   // d
+		x0(1) = (rand() / (double)RAND_MAX) * (l_max - l_min) + l_min;   // l
 		
 		// Setup parameters: ud1(0) = w
 		matrix params(1, 1);
@@ -910,7 +922,7 @@ void lab5()
 		double d = m2d(opt.x(0));
 		double l = m2d(opt.x(1));
 		
-		const double P = 3000.0;
+		const double P = 2000.0;  // 2 kN from K5.pdf
 		const double E = 120e9;
 		const double rho = 8920.0;
 		
@@ -921,12 +933,12 @@ void lab5()
 		double u = (64.0 * P * pow(l_m, 3)) / (3.0 * E * M_PI * pow(d_m, 4)) * 1000.0;
 		double sigma = (32.0 * P * l_m) / (M_PI * pow(d_m, 3));
 		
-		// Write results
-		beam_file << w << ","
-		          << x0(0) << "," << x0(1) << ","
-		          << d << "," << l << ","
-		          << mass << "," << u << "," << sigma / 1e6 << ","
-		          << opt.y(0) << "," << solution::f_calls << endl;
+		// Write results to TABLE 2
+		table2 << w << ","
+		       << x0(0) << "," << x0(1) << ","
+		       << d << "," << l << ","
+		       << mass << "," << u << "," << sigma / 1e6 << ","
+		       << opt.y(0) << "," << solution::f_calls << endl;
 		
 		// Print progress every 10 iterations
 		if (w_idx % 10 == 0) {
@@ -936,15 +948,13 @@ void lab5()
 		}
 	}
 	
-	beam_file.close();
-	cout << "\nResults saved to lab5_beam.csv" << endl;
+	table2.close();
+	cout << "\nResults saved to lab5_table2.csv (101 rows: beam problem)" << endl;
 	
 	cout << "\n=== LAB5 COMPLETED ===" << endl;
 	cout << "Generated files:" << endl;
-	cout << "  - lab5_test_a1.csv (test problem with a=1)" << endl;
-	cout << "  - lab5_test_a10.csv (test problem with a=10)" << endl;
-	cout << "  - lab5_test_a100.csv (test problem with a=100)" << endl;
-	cout << "  - lab5_beam.csv (cantilever beam problem)" << endl;
+	cout << "  - lab5_table1.csv (Table 1: test problems for a=1,10,100)" << endl;
+	cout << "  - lab5_table2.csv (Table 2: cantilever beam problem)" << endl;
 }
 
 void lab6()
