@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 		// Change this line to switch between different labs
 		// To run lab5: uncomment the line below and comment out lab4()
 		// lab5();
-		lab4();
+		lab6();
 	}
 	catch (string EX_INFO)
 	{
@@ -949,4 +949,44 @@ void lab5()
 
 void lab6()
 {
+	int N = 2;
+	int mi = 20;
+	int lambda = 40;
+	double epsilon = 1e-5;
+	int Nmax = 10000;
+
+	matrix lb(N, 1);
+	lb(0) = -5;
+	lb(1) = -5;
+
+	matrix ub(N, 1);
+	ub(0) = 5;
+	ub(1) = 5;
+
+	double sigma_values[] = { 0.01, 0.1, 1, 10, 100 };
+
+	ofstream Sout("lab6_tabela1.csv");
+
+	Sout << "Lp.,x1(0),x2(0),x1*,x2*,y*,f_calls,,x1*,x2*,y*,f_calls,,x1*,x2*,y*,f_calls,,x1*,x2*,y*,f_calls,,x1*,x2*,y*,f_calls" << endl;
+
+	for (int i = 0; i < 100; i++) {
+		matrix x0 = rand_mat(2);
+		x0(0) = x0(0) * 10.0 - 5.0;
+		x0(1) = x0(1) * 10.0 - 5.0;
+
+		Sout << i << "," << x0(0) << "," << x0(1) << ",";
+
+		for (double sigma : sigma_values) {
+			matrix sigma0(1, 1);
+			sigma0(0) = sigma;
+			
+			solution opt = EA(ff6T, N, lb, ub, mi, lambda, sigma0, epsilon, Nmax, NAN, NAN);
+
+			Sout << opt.x(0) << "," << opt.x(1) << "," << opt.y(0) << "," << solution::f_calls << ",,";
+
+			solution::clear_calls();
+		}
+
+		Sout << endl;
+	}
 }

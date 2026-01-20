@@ -563,3 +563,12 @@ matrix ff5R(matrix x, matrix ud1, matrix ud2) {
     
     return matrix(f);
 }
+
+matrix ff6T(matrix x, matrix ud1, matrix ud2) 
+{
+	matrix y;
+	
+    y = x(0) * x(0) + x(1) * x(1) - cos(2.5 * M_PI * x(0)) - cos(2.5 * M_PI * x(1)) + 2;
+	
+    return y;
+}
