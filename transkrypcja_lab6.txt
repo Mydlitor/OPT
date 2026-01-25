@@ -1,0 +1,81 @@
+ AKADEMIA GÓRNICZO-HUTNICZA
+KATEDRA INFORMATYKI STOSOWANEJ I MODELOWANIA
+METODY OPTYMALIZACJI
+Optymalizacja metodami niedeterministycznymi
+1. Cel ćwiczenia.
+Celem ćwiczenia jest zapoznanie się z niedeterministycznymi metodami optymalizacji poprzez ich implementację oraz wykorzystanie do wyznaczenia minimum podanej funkcji celu.
+2. Testowa funkcja celu.
+Funkcja celu dana jest wzorem:
+𝑓(𝑥􏰀, 𝑥􏰁) = 𝑥􏰀􏰁 + 𝑥􏰁􏰁 − 𝑐𝑜𝑠(2,5𝜋𝑥􏰀) − 𝑐𝑜𝑠(2,5𝜋𝑥􏰁) + 2
+Jej wykres przedstawiony jest poniżej.
+  Punkt startowy powinien należeć do przedziału 𝑥􏰀(􏰂) ∈ [−5, 5], 𝑥􏰁(􏰂) ∈ [−5, 5]. 3. Problem rzeczywisty.
+Dwa ciężarki o masach 𝑚􏰀 = 1 𝑘𝑔 oraz 𝑚􏰁 = 2 𝑘𝑔 zawieszone są na sprężynach o współczynnikach sprężystości wynoszących odpowiednio 𝑘􏰀 = 4 𝑁􏰃𝑚 oraz 𝑘􏰁 = 6 𝑁􏰃𝑚 .
+ ©Łukasz Sztangret, KISiM, AGH
+
+Współczynniki 𝑏􏰀 oraz 𝑏􏰁 odpowiadają za opór ruchu, a zmienne 𝑥􏰀 oraz 𝑥􏰁 oznaczają położenie ciężarków. Przeprowadzone zostało doświadczenie (in silico) polegające na przyłożeniu siły 𝐹 = 5 𝑁 do dolnego ciężarka i obserwacja położenia ciężarków.
+Równania opisujące ruch ciężarków są następujące:
+􏰄𝑚􏰀𝑥̈􏰀 +𝑏􏰀𝑥̇􏰀 +𝑏􏰁(𝑥̇􏰀 −𝑥̇􏰁)+𝑘􏰀𝑥􏰀 +𝑘􏰁(𝑥􏰀 −𝑥􏰁)=0 𝑚􏰁𝑥̈􏰁 −𝑏􏰁(𝑥̇􏰀 −𝑥̇􏰁)−𝑘􏰁(𝑥􏰀 −𝑥􏰁)=𝐹
+Położenie ciężarków jest zapisane w pliku polozenia.txt. Doświadczenie trwało 100 𝑠, a zapis położeń odbywał się co 0,1𝑠 (daje to 1001 zapisanych wierszy).
+Celem optymalizacji jest znalezienie wartości 𝑏􏰀 ∈ [0,1; 3] 𝑁𝑠􏰃𝑚 oraz 𝑏􏰁 ∈ [0,1; 3] 𝑁𝑠􏰃𝑚 , dla których zostało przeprowadzone doświadczenie. Symulację ruchu ciężarków należy przeprowadzać dla czasu 𝑡􏰂 = 0 𝑠 , 𝑑𝑡 = 0,1 𝑠 , 𝑡􏰅􏰆􏰇 = 100 𝑠 . W celu sprawdzenia poprawności implementacji
+modelu, można przeprowadzić symulację dla 𝑏􏰀 = 2 𝑁𝑠􏰃𝑚 oraz 𝑏􏰁 = 3 𝑁𝑠􏰃𝑚. Poniższy wykres przedstawia położenie pierwszego oraz drugiego ciężarka.
+3,5 3 2,5 2 1,5 1 0,5 0
+4.
+          0 3 6 9 21 51 81 12 42 72 03 3 63 93 24 54 84 15 45 75 06 36 6 96 27 57 87 18 48 78 09 39 69 9
+Algorytmy optymalizacji.
+Do wyznaczenia minimum funkcji celu należy zastosować algorytm ewolucyjny – strategię (μ+λ).
+5. Zadanie do samodzielnego wykonania. a. Testowa funkcja celu.
+Zadanie polega na wykonaniu 100 optymalizacji dla pięciu różnych wartości początkowych współczynnika mutacji (σ=0.01, 0.1, 1, 10, 100). Wyniki należy zestawić w pliku xlsx w tabeli 1. Wartości średnie (tylko dla optymalizacji zakończonych znalezieniem minimum globalnego) należy przedstawić w tabeli 2.
+b. Problem rzeczywisty.
+Zadanie polega na przeprowadzeniu jednej optymalizacji. Wyniki należy zestawić w tabeli 3. Dla znalezionych, optymalnych wartości 𝑏􏰀 oraz 𝑏􏰁 należy przeprowadzić symulację, a jej wyniki wstawić do arkusza Symulacja. Na ich podstawie należy narysować wykres przedstawiający położenie ciężarków naniesione na wykres położenia ciężarków uzyskany w doświadczeniu.
+©Łukasz Sztangret, KISiM, AGH
+
+6. Sprawozdanie.
+Sprawozdanie powinno zostać przygotowane w formacie docx (lub doc) albo pdf i powinno zawierać parametry poszczególnych algorytmów, dyskusję wyników oraz wnioski. Dodatkowo, w sprawozdaniu należy umieścić kod zaimplementowanych metod, funkcję lab6 oraz funkcje wykorzystane do obliczenia funkcji celu i pochodnych podczas rozwiązywania równań różniczkowych. Wyniki optymalizacji należy przygotować w formacie xlsx (lub xls).
+Pseudokod algorytmu ewolucyjnego.
+Dane wejściowe: liczba zmiennych decyzyjnych N, przedział poszukiwań [lb, ub] ϶ x (gdzie lb oraz ub to N-elementowe wektory), liczebność populacji bazowej μ oraz tymczasowej λ, początkowa wartość współczynnika zakresu mutacji σ(0), dokładność obliczeń ε > 0, maksymalna liczba wywołań funkcji celu Nmax
+1: i=0
+2: α = N-0,5
+3: β = (2N)-0,25
+Generowanie populacji początkowej
+4: P(0) = {(x1(0), σ1(0)), (x2(0), σ2(0)), ..., (xμ(0), σμ(0))}
+5: repeat
+Tworzenie koła ruletki
+6: for j = 1 to μ
+7: φj = 1 / f(xj(i))
+8: end for
+9: Φ = ∑φ
+10: q0 = 0
+11: for j = 1 to μ
+12: qj =qj-1 +φj /Φ
+13: end for
+14: wylosuj a stosując rozkład normalny
+15: for j = 1 to λ
+Losowanie pierwszego osobnika rodzicielskiego
+16:           wylosuj r ε [0, 1]
+17: znajdź k takie, że r ε (qk-1, qk]
+18: A = Pk(i)
+Losowanie drugiego osobnika rodzicielskiego
+19:           wylosuj r ε [0, 1]
+20: znajdź k takie, że r ε (qk-1, qk]
+21: B = Pk(i)
+Krzyżowanie
+22:           wylosuj r ε [0, 1]
+23: Tj(i) =r∙A+(1–r)∙B
+Mutacja
+24: wylosuj b stosując rozkład normalny
+25: Tj(i).σ = Tj(i).σ ∙ exp(αa + βb)
+26: wylosuj b stosując rozkład normalny
+27: Tj(i).x = Tj(i).x + b ∙ Tj(i).σ
+28: end for
+29: P(i+1) = znajdź μ najlepszych osobników w populacji (P(i) ᴜ T(i))
+30: x* = znajdź najlepszego osobnika w populacji Pk(i+1)
+31: i=i+1
+©Łukasz Sztangret, KISiM, AGH
+
+32:
+33:
+34:
+35: until f(x*) < ε 36: return x*
+if fcalls > Nmax then return error
+end if
+©Łukasz Sztangret, KISiM, AGH
