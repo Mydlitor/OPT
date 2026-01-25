@@ -95,17 +95,9 @@ Warto zauważyć, że algorytm wykorzystał pełną dozwoloną liczbę wywołań
 
 **Wnioski:** 
 
-1. Algorytm ewolucyjny (μ+λ) jest skutecznym narzędziem do optymalizacji funkcji wielomodalnych oraz identyfikacji parametrów modeli dynamicznych.
+Analiza wyników dla testowej funkcji celu wyraźnie pokazuje, że początkowa wartość współczynnika mutacji σ⁽⁰⁾ ma znaczący wpływ na skuteczność algorytmu ewolucyjnego. Dla najmniejszej wartości σ⁽⁰⁾ = 0.01 zaobserwowano najniższą skuteczność wynoszącą 75% oraz znaczną liczbę przypadków, w których algorytm przekroczył maksymalną liczbę wywołań funkcji celu bez znalezienia minimum globalnego. Jednocześnie jednak pomyślne optymalizacje przy tej wartości σ charakteryzowały się najniższą średnią liczbą wywołań funkcji celu, wynoszącą około 511, co wskazuje, że w przypadku trafienia na właściwą trajektorię poszukiwań algorytm zbiega bardzo szybko. Zwiększenie współczynnika do σ⁽⁰⁾ = 0.1 i σ⁽⁰⁾ = 1 poprawiło skuteczność odpowiednio do 92% i 98%, przy zachowaniu bardzo dobrej efektywności obliczeniowej – średnio 513 i 594 wywołań funkcji dla udanych prób. Najwyższą skuteczność, wynoszącą 100%, uzyskano dla σ⁽⁰⁾ = 10, jednak kosztem zwiększenia średniej liczby wywołań do 810. Dla σ⁽⁰⁾ = 100 skuteczność nieznacznie spadła do 97%, a liczba wywołań wzrosła do średnio 1482, co świadczy o tym, że zbyt duża wartość początkowego współczynnika mutacji prowadzi do bardziej chaotycznego przeszukiwania i mniejszej efektywności obliczeniowej, choć wciąż zapewnia wysoką niezawodność znalezienia rozwiązania.
 
-2. Początkowa wartość współczynnika mutacji σ⁽⁰⁾ ma kluczowe znaczenie dla skuteczności algorytmu. Dla testowej funkcji celu optymalne wartości σ⁽⁰⁾ znajdują się w zakresie 0.1 – 1.
-
-3. Mechanizm selekcji ruletki wraz z krzyżowaniem i mutacją pozwala na efektywne przeszukiwanie przestrzeni rozwiązań, łącząc eksplorację z eksploatacją.
-
-4. Strategia (μ+λ) zapewnia elitarność – najlepsze rozwiązania są zawsze zachowywane w następnej generacji, co gwarantuje monotoniczność zbieżności.
-
-5. Dla problemu identyfikacji parametrów układu mechanicznego algorytm uzyskał praktycznie idealne dopasowanie do danych eksperymentalnych, co potwierdza jego przydatność w zastosowaniach inżynierskich.
-
-6. Niedeterministyczny charakter algorytmu oznacza, że wyniki mogą się różnić między uruchomieniami. W przypadku krytycznych zastosowań zaleca się wykonanie wielu niezależnych optymalizacji i wybór najlepszego rozwiązania.
+Problem rzeczywisty związany z identyfikacją parametrów układu mechanicznego potwierdza skuteczność algorytmu ewolucyjnego w zastosowaniach inżynierskich. Znalezione wartości współczynników oporu ruchu b₁* = 0.75 Ns/m oraz b₂* = 1.25 Ns/m dały błąd średniokwadratowy na poziomie 1.62 × 10⁻⁸, co oznacza praktycznie idealne dopasowanie między symulacją a danymi eksperymentalnymi. Algorytm wykorzystał maksymalną dozwoloną liczbę wywołań funkcji celu (10020), nie osiągając ściśle zdefiniowanego kryterium stopu ε = 10⁻¹⁰, jednak otrzymany wynik jest w pełni satysfakcjonujący z punktu widzenia praktycznego zastosowania. Mechanizm adaptacji współczynnika mutacji poprzez operatory α i β, charakterystyczny dla strategii (μ+λ), pozwolił algorytmowi na skuteczne dostrajanie się do charakteru problemu w trakcie optymalizacji. Strategia (μ+λ) zapewnia ponadto elitaryzm, dzięki któremu najlepsze osobniki z populacji bazowej zawsze są zachowywane w następnej generacji, co gwarantuje monotoniczną zbieżność i zapobiega utracie dobrych rozwiązań już znalezionych w trakcie poszukiwań.
 
 **Zaimplementowany algorytm ewolucyjny (μ+λ)**
 
