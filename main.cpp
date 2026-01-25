@@ -9,6 +9,7 @@ Data ostatniej modyfikacji: 30.09.2025
 *********************************************/
 
 #include "opt_alg.h"
+#include <sstream>
 
 void lab0();
 void lab1(int aN);
@@ -949,6 +950,9 @@ void lab5()
 
 void lab6()
 {
+	// ==========================================
+	// CZĘŚĆ A: Testowa funkcja celu
+	// ==========================================
 	int N = 2;
 	int mi = 20;
 	int lambda = 40;
@@ -989,4 +993,121 @@ void lab6()
 
 		Sout << endl;
 	}
+	
+	Sout.close();
+	
+	cout << "Czesc A zakonczona - wyniki w lab6_tabela1.csv" << endl;
+	
+	// ==========================================
+	// CZĘŚĆ B: Problem rzeczywisty
+	// ==========================================
+	cout << "\n=== PROBLEM RZECZYWISTY ===" << endl;
+	
+	// Wczytanie danych eksperymentalnych z pliku polozenia.txt
+	// Format: x1; x2; (przecinek jako separator dziesiętny)
+	ifstream fin("polozenia.txt");
+	if (!fin.is_open()) {
+		throw string("Nie mozna otworzyc pliku polozenia.txt");
+	}
+	
+	// Wczytanie danych do macierzy (1001 wierszy, 2 kolumny)
+	const int n_points = 1001;
+	matrix exp_data(n_points, 2);
+	
+	string line;
+	int row = 0;
+	while (getline(fin, line) && row < n_points) {
+		// Zamiana przecinków na kropki (separator dziesiętny)
+		for (char& c : line) {
+			if (c == ',') c = '.';
+		}
+		
+		// Parsowanie linii: x1; x2;
+		double x1_val, x2_val;
+		char sep1, sep2;
+		istringstream iss(line);
+		if (iss >> x1_val >> sep1 >> x2_val >> sep2) {
+			exp_data(row, 0) = x1_val;
+			exp_data(row, 1) = x2_val;
+			row++;
+		}
+	}
+	fin.close();
+	
+	cout << "Wczytano " << row << " punktow danych eksperymentalnych" << endl;
+	
+	// Parametry optymalizacji dla problemu rzeczywistego
+	N = 2;  // b1, b2
+	mi = 20;
+	lambda = 40;
+	epsilon = 1e-10;  // mniejsze epsilon dla dokładniejszego dopasowania
+	Nmax = 10000;
+	
+	matrix lb_real(N, 1);
+	lb_real(0) = 0.1;  // b1 min
+	lb_real(1) = 0.1;  // b2 min
+	
+	matrix ub_real(N, 1);
+	ub_real(0) = 3.0;  // b1 max
+	ub_real(1) = 3.0;  // b2 max
+	
+	matrix sigma0_real(1, 1);
+	sigma0_real(0) = 0.5;  // początkowy współczynnik mutacji
+	
+	solution::clear_calls();
+	
+	// Uruchomienie optymalizacji
+	solution opt_real = EA(ff6R, N, lb_real, ub_real, mi, lambda, sigma0_real, epsilon, Nmax, exp_data, NAN);
+	
+	cout << "\n=== WYNIKI OPTYMALIZACJI ===" << endl;
+	cout << "b1* = " << opt_real.x(0) << " Ns/m" << endl;
+	cout << "b2* = " << opt_real.x(1) << " Ns/m" << endl;
+	cout << "Blad (SSE) = " << opt_real.y(0) << endl;
+	cout << "Liczba wywolan funkcji celu: " << solution::f_calls << endl;
+	cout << "Flaga zakonczenia: " << opt_real.flag << endl;
+	
+	// Zapis wyników do tabeli 3
+	ofstream Sout_tab3("lab6_tabela3.csv");
+	Sout_tab3 << "Parametr,Wartosc" << endl;
+	Sout_tab3 << "b1*," << opt_real.x(0) << endl;
+	Sout_tab3 << "b2*," << opt_real.x(1) << endl;
+	Sout_tab3 << "Blad SSE," << opt_real.y(0) << endl;
+	Sout_tab3 << "f_calls," << solution::f_calls << endl;
+	Sout_tab3.close();
+	
+	// Przeprowadzenie symulacji dla znalezionych b1*, b2*
+	matrix Y0(4, 1);
+	Y0(0) = 0.0;  // x1(0)
+	Y0(1) = 0.0;  // x2(0)
+	Y0(2) = 0.0;  // v1(0)
+	Y0(3) = 0.0;  // v2(0)
+	
+	matrix params(2, 1);
+	params(0) = opt_real.x(0);  // b1*
+	params(1) = opt_real.x(1);  // b2*
+	
+	matrix* Y_sim = solve_ode(df6, 0.0, 0.1, 100.0, Y0, params, NAN);
+	
+	int n_sim = get_len(Y_sim[0]);
+	
+	// Zapis symulacji do pliku CSV (dla arkusza "Symulacja")
+	ofstream Sout_sim("lab6_symulacja.csv");
+	Sout_sim << "t,x1_sim,x2_sim,x1_exp,x2_exp" << endl;
+	
+	for (int i = 0; i < n_sim && i < n_points; i++) {
+		double t = i * 0.1;
+		Sout_sim << t << "," 
+		         << Y_sim[1](i, 0) << "," << Y_sim[1](i, 1) << ","
+		         << exp_data(i, 0) << "," << exp_data(i, 1) << endl;
+	}
+	
+	Sout_sim.close();
+	
+	Y_sim[0].~matrix();
+	Y_sim[1].~matrix();
+	
+	cout << "\nSymulacja zapisana do lab6_symulacja.csv" << endl;
+	cout << "Tabela 3 zapisana do lab6_tabela3.csv" << endl;
+	
+	solution::clear_calls();
 }

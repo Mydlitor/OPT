@@ -572,3 +572,97 @@ matrix ff6T(matrix x, matrix ud1, matrix ud2)
 	
     return y;
 }
+
+// Lab 6 - Problem rzeczywisty: układ dwóch ciężarków na sprężynach
+// Równania ruchu:
+// m1*x1'' + b1*x1' + b2*(x1' - x2') + k1*x1 + k2*(x1 - x2) = 0
+// m2*x2'' - b2*(x1' - x2') - k2*(x1 - x2) = F
+// Stan: Y = [x1, x2, v1, v2] gdzie v1 = x1', v2 = x2'
+matrix df6(double t, matrix Y, matrix ud1, matrix ud2)
+{
+    matrix dY(4, 1);
+    
+    // Parametry układu
+    double m1 = 1.0;    // masa 1 [kg]
+    double m2 = 2.0;    // masa 2 [kg]
+    double k1 = 4.0;    // współczynnik sprężystości 1 [N/m]
+    double k2 = 6.0;    // współczynnik sprężystości 2 [N/m]
+    double F = 5.0;     // siła przyłożona do dolnego ciężarka [N]
+    
+    // Parametry optymalizowane (b1, b2) przekazane przez ud1
+    double b1 = m2d(ud1(0));    // współczynnik oporu ruchu 1 [Ns/m]
+    double b2 = m2d(ud1(1));    // współczynnik oporu ruchu 2 [Ns/m]
+    
+    // Stan: x1, x2, v1, v2
+    double x1 = Y(0);
+    double x2 = Y(1);
+    double v1 = Y(2);
+    double v2 = Y(3);
+    
+    // Pochodne pozycji = prędkości
+    dY(0) = v1;
+    dY(1) = v2;
+    
+    // Pochodne prędkości = przyspieszenia
+    // Z równania 1: m1*a1 = -b1*v1 - b2*(v1 - v2) - k1*x1 - k2*(x1 - x2)
+    dY(2) = (-b1 * v1 - b2 * (v1 - v2) - k1 * x1 - k2 * (x1 - x2)) / m1;
+    
+    // Z równania 2: m2*a2 = b2*(v1 - v2) + k2*(x1 - x2) + F
+    dY(3) = (b2 * (v1 - v2) + k2 * (x1 - x2) + F) / m2;
+    
+    return dY;
+}
+
+// Funkcja celu dla problemu rzeczywistego Lab 6
+// x = [b1, b2] - poszukiwane współczynniki oporu
+// ud1 = macierz z danymi eksperymentalnymi [x1_exp, x2_exp] (Nx2)
+// Funkcja minimalizuje błąd średniokwadratowy między symulacją a eksperymentem
+matrix ff6R(matrix x, matrix ud1, matrix ud2)
+{
+    matrix y(1, 1);
+    
+    // Parametry symulacji
+    double t0 = 0.0;
+    double dt = 0.1;
+    double tend = 100.0;
+    int n_points = 1001;  // (tend - t0) / dt + 1
+    
+    // Warunki początkowe: x1(0) = 0, x2(0) = 0, v1(0) = 0, v2(0) = 0
+    matrix Y0(4, 1);
+    Y0(0) = 0.0;
+    Y0(1) = 0.0;
+    Y0(2) = 0.0;
+    Y0(3) = 0.0;
+    
+    // Współczynniki b1, b2 do przekazania do df6
+    matrix params(2, 1);
+    params(0) = x(0);  // b1
+    params(1) = x(1);  // b2
+    
+    // Rozwiązanie równań różniczkowych
+    matrix* Y = solve_ode(df6, t0, dt, tend, Y0, params, NAN);
+    
+    int n = get_len(Y[0]);
+    
+    // Obliczenie błędu średniokwadratowego
+    double error = 0.0;
+    
+    // ud1 zawiera dane eksperymentalne: kolumna 0 = x1_exp, kolumna 1 = x2_exp
+    for (int i = 0; i < n && i < n_points; i++)
+    {
+        double x1_sim = Y[1](i, 0);  // położenie ciężarka 1 z symulacji
+        double x2_sim = Y[1](i, 1);  // położenie ciężarka 2 z symulacji
+        
+        double x1_exp = ud1(i, 0);   // położenie ciężarka 1 z eksperymentu
+        double x2_exp = ud1(i, 1);   // położenie ciężarka 2 z eksperymentu
+        
+        error += pow(x1_sim - x1_exp, 2) + pow(x2_sim - x2_exp, 2);
+    }
+    
+    y(0, 0) = error;
+    
+    Y[0].~matrix();
+    Y[1].~matrix();
+    
+    return y;
+}
