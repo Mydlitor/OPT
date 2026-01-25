@@ -1369,7 +1369,161 @@ solution EA(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, in
 	try
 	{
 		solution Xopt;
-		//Tu wpisz kod funkcji
+		
+		// Krok 2-3: Inicjalizacja parametrów
+        double alpha = pow(N, -0.5);
+        double beta = pow(2.0 * N, -0.25);
+        
+        // Krok 4: Generowanie populacji początkowej P(0)
+        solution* P = new solution[mi];
+        for (int j = 0; j < mi; ++j)
+        {
+            P[j].x = rand_mat(N);
+            for (int i = 0; i < N; ++i)
+                P[j].x(i) = (ub(i) - lb(i)) * P[j].x(i) + lb(i);
+            
+            P[j].ud = sigma0; // sigma dla każdego osobnika
+            P[j].fit_fun(ff, ud1, ud2);
+        }
+        
+        int iteration = 0;
+        
+        // Krok 5: Pętla główna
+        while (true)
+        {
+            // Krok 6-13: Tworzenie koła ruletki
+            double* phi = new double[mi];
+            double Phi = 0.0;
+            const double epsilon_div = 1e-10;  // Minimum fitness value to prevent division by zero
+            const double max_phi = 1e10;        // Maximum phi to prevent numerical overflow
+            
+            for (int j = 0; j < mi; ++j)
+            {
+                double y_val = m2d(P[j].y);
+                double phi_val = 1.0 / fmax(y_val, epsilon_div);
+                phi[j] = fmin(phi_val, max_phi);  // Clamp to prevent overflow
+                Phi += phi[j];
+            }
+            
+            double* q = new double[mi + 1];
+            q[0] = 0.0;
+            for (int j = 1; j <= mi; ++j)
+            {
+                q[j] = q[j - 1] + phi[j - 1] / Phi;
+            }
+            
+            // Krok 14: Losowanie 'a' z rozkładu normalnego (dla całej iteracji)
+            matrix a = randn_mat(1, 1);
+            
+            // Krok 15-28: Tworzenie populacji tymczasowej
+            solution* T = new solution[lambda];
+            
+            for (int j = 0; j < lambda; ++j)
+            {
+                // Krok 16-18: Losowanie pierwszego rodzica A
+                double r1 = ((double)rand() / RAND_MAX);
+                int k1 = 0;
+                for (int k = 1; k <= mi; ++k)
+                {
+                    if (r1 > q[k - 1] && r1 <= q[k])
+                    {
+                        k1 = k - 1;
+                        break;
+                    }
+                }
+                solution A = P[k1];
+                
+                // Krok 19-21: Losowanie drugiego rodzica B
+                double r2 = ((double)rand() / RAND_MAX);
+                int k2 = 0;
+                for (int k = 1; k <= mi; ++k)
+                {
+                    if (r2 > q[k - 1] && r2 <= q[k])
+                    {
+                        k2 = k - 1;
+                        break;
+                    }
+                }
+                solution B = P[k2];
+                
+                // Krok 22-23: Krzyżowanie
+                double r = ((double)rand() / RAND_MAX);
+                T[j].x = r * A.x + (1.0 - r) * B.x;
+                T[j].ud = r * A.ud + (1.0 - r) * B.ud;
+                
+                // Krok 24-25: Mutacja sigma
+                matrix b1 = randn_mat(1, 1);
+                T[j].ud = T[j].ud * exp(alpha * m2d(a) + beta * m2d(b1));
+                
+                // Krok 26-27: Mutacja x
+                matrix b = randn_mat(N, 1);
+                T[j].x = T[j].x + b * m2d(T[j].ud);
+                
+                // Ograniczenie do przedziału [lb, ub]
+                for (int i = 0; i < N; ++i)
+                {
+                    if (T[j].x(i) < lb(i))
+                        T[j].x(i) = lb(i);
+                    if (T[j].x(i) > ub(i))
+                        T[j].x(i) = ub(i);
+                }
+                
+                T[j].fit_fun(ff, ud1, ud2);
+            }
+            
+            // Krok 29: Selekcja - znajdź mi najlepszych osobników w P ∪ T
+            solution* combined = new solution[mi + lambda];
+            for (int j = 0; j < mi; ++j)
+                combined[j] = P[j];
+            for (int j = 0; j < lambda; ++j)
+                combined[mi + j] = T[j];
+            
+            // Sortowanie populacji według wartości funkcji celu
+            for (int i = 0; i < mi + lambda - 1; ++i)
+            {
+                for (int j = i + 1; j < mi + lambda; ++j)
+                {
+                    if (m2d(combined[j].y) < m2d(combined[i].y))
+                    {
+                        solution temp = combined[i];
+                        combined[i] = combined[j];
+                        combined[j] = temp;
+                    }
+                }
+            }
+            
+            // Wybór mi najlepszych
+            for (int j = 0; j < mi; ++j)
+                P[j] = combined[j];
+            
+            // Krok 30: Znajdź najlepszego osobnika
+            Xopt = P[0];
+            
+            delete[] phi;
+            delete[] q;
+            delete[] T;
+            delete[] combined;
+            
+            iteration++;
+            
+            // Krok 32-34: Sprawdzenie warunku stopu - Nmax
+            if (solution::f_calls >= Nmax)
+            {
+                Xopt.flag = 0;
+                delete[] P;
+                return Xopt;
+            }
+            
+            // Krok 35: Sprawdzenie warunku stopu - epsilon
+            if (m2d(Xopt.y) < epsilon)
+            {
+                Xopt.flag = 1;
+                delete[] P;
+                return Xopt;
+            }
+        }
+        
+        delete[] P;
 
 		return Xopt;
 	}
