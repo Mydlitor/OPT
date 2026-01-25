@@ -391,3 +391,8 @@ symulacja_*.csv
 
 # Generated output files from lab5 (keep the final results)
 # lab5_*.csv are the actual results, so don't ignore them
+
+# Generated output files from lab6 (keep the final results)
+lab6_symulacja.csv
+lab6_tabela1.csv
+lab6_tabela3.csv

@@ -1394,10 +1394,12 @@ solution EA(matrix(*ff)(matrix, matrix, matrix), int N, matrix lb, matrix ub, in
             // Krok 6-13: Tworzenie koła ruletki
             double* phi = new double[mi];
             double Phi = 0.0;
+            const double epsilon_div = 1e-15;  // Prevent division by zero
             
             for (int j = 0; j < mi; ++j)
             {
-                phi[j] = 1.0 / m2d(P[j].y);
+                double y_val = m2d(P[j].y);
+                phi[j] = 1.0 / fmax(y_val, epsilon_div);
                 Phi += phi[j];
             }
             
